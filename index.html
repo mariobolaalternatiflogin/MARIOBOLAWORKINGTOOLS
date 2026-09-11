@@ -3,95 +3,236 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b1220">
-<title>MARIOBOLA Working Tools</title>
-<link rel="stylesheet" href="styles.css?v=1.0.0">
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<title>MARIOBOLA Support Tools</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2d;--panel2:#18233b;--text:#eef3ff;--muted:#9aa8c7;--line:#2a3858;--accent:#6ea8fe}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#080d19,#111b31);color:var(--text)}
+header{padding:20px 24px;border-bottom:1px solid var(--line);background:#0c1324;position:sticky;top:0;z-index:10}
+h1{margin:0;font-size:22px}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+nav{display:flex;gap:8px;padding:12px 24px;background:#0d1527;border-bottom:1px solid var(--line);position:sticky;top:75px;z-index:9;overflow:auto}
+nav button{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 15px;border-radius:9px;cursor:pointer;white-space:nowrap}
+nav button.active{background:var(--accent);color:#07101f;border-color:var(--accent);font-weight:700}
+main{max-width:1500px;margin:auto;padding:22px}.page{display:none}.page.active{display:block}
+.card{background:rgba(18,26,45,.94);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 12px 35px #0004}
+h2{margin:0 0 7px;font-size:20px}h3{margin:0 0 12px}.hint{color:var(--muted);font-size:13px;line-height:1.55}
+textarea{width:100%;min-height:220px;background:#080e1b;color:#eaf0ff;border:1px solid var(--line);border-radius:10px;padding:12px;font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:0 0 auto}
+input,select{background:#0a1120;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px}
+button.primary{background:var(--accent);color:#07101f;border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 15px;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin:14px 0}
+.stat{padding:13px;border:1px solid var(--line);border-radius:10px;background:#0d1527}.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:var(--muted)}
+.table-wrap{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}th,td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#17223a;position:sticky;top:0;z-index:2}
+.ok{background:#123d2a}.danger{background:#4b1820}.warn{background:#503b12}.pending{background:#12375a}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.b-ok{background:#1e9d63}.b-danger{background:#d64555}.b-warn{background:#d89522;color:#171007}.b-pending{background:#3184c6}
+small.muted{color:var(--muted)}
+.kv{display:grid;grid-template-columns:180px 1fr;gap:7px;font-size:13px}.kv b{color:#b9c7e6}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}main{padding:12px}nav{top:69px}}
+</style>
 </head>
 <body>
-<div id="loginGate" class="login-gate hidden">
-  <div class="login-card">
-    <div class="brand-mark">M</div>
-    <h1>MARIOBOLA WORKING TOOLS</h1>
-    <p>Area kerja admin. Data disimpan di browser ini.</p>
-    <form id="loginForm">
-      <label>Password Admin<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-      <button class="btn primary" type="submit">LOGIN ADMIN</button>
-      <p id="loginError" class="error"></p>
-    </form>
-  </div>
+<header><h1>MARIOBOLA Support Tools</h1><div class="sub">New Member • Bonus Audit • New Member First Deposit</div></header>
+<nav>
+<button class="active" data-page="register">1. New Member</button>
+<button data-page="bonus">2. BONUS</button>
+<button data-page="first">3. New Member First Deposit</button>
+</nav>
+<main>
+
+<section id="register" class="page active">
+<div class="card">
+<h2>Daftar New Member</h2>
+<p class="hint">Halaman pendaftaran MARIOBOLA dapat dibuka langsung. Form otomatis dari tools ini sengaja tidak meniru/mengirim CAPTCHA atau mem-bypass validasi situs.</p>
+<div class="row">
+<a href="https://mariobola2026.me/_View/Register.aspx" target="_blank" rel="noopener"><button class="primary">Buka Form Pendaftaran MARIOBOLA</button></a>
 </div>
-
-<div id="setupGate" class="login-gate hidden">
-  <div class="login-card">
-    <div class="brand-mark">M</div>
-    <h1>SETUP ADMIN</h1>
-    <p>Buat password admin untuk dashboard ini. Password tidak dikirim ke server.</p>
-    <form id="setupForm">
-      <label>Password Baru<input id="setupPassword" type="password" minlength="8" required></label>
-      <label>Ulangi Password<input id="setupPassword2" type="password" minlength="8" required></label>
-      <button class="btn primary" type="submit">BUAT PASSWORD</button>
-      <p id="setupError" class="error"></p>
-    </form>
-  </div>
+<br><div class="kv">
+<b>Status integrasi</b><span>External registration link</span>
+<b>Alasan</b><span>Form pihak ketiga dapat memakai CAPTCHA, session, anti-CSRF, atau pembatasan iframe; karena itu link resmi adalah fallback yang aman.</span>
 </div>
-
-<div id="app" class="app hidden">
-<header class="topbar">
-  <div class="brand"><span class="brand-mark small">M</span><div><strong>MARIOBOLA</strong><small>WORKING TOOLS</small></div></div>
-  <nav id="mainNav" class="nav">
-    <button data-page="dashboard" class="nav-btn active">DASHBOARD</button>
-    <button data-page="member" class="nav-btn">MEMBER</button>
-    <button data-page="game" class="nav-btn">GAME</button>
-  </nav>
-  <div class="top-actions"><span id="dbStatus" class="pill">LOCAL DATABASE</span><button id="logoutBtn" class="btn ghost">LOGOUT</button></div>
-</header>
-
-<main class="content">
-<section id="page-dashboard" class="page active">
-  <div class="hero panel"><div><span class="eyebrow">WORKING TOOLS</span><h2>Pusat kerja admin untuk audit member & game</h2><p>Dashboard ini dibuat untuk mempercepat pengecekan bonus harian, New Member First Deposit, daftar Member Safety, serta pengolahan WIN/LOSE ALL GAME MEMBER dari file Excel.</p></div><div class="hero-badge">ADMIN<br>ONLY</div></div>
-  <div class="stat-grid">
-    <div class="stat"><span>Total ID Safety</span><b id="statSafety">0</b></div>
-    <div class="stat"><span>Bonus Bermasalah</span><b id="statBonusIssues">0</b></div>
-    <div class="stat"><span>New Member First Deposit</span><b id="statNewMember">0</b></div>
-    <div class="stat"><span>Game Rows Terakhir</span><b id="statGameRows">0</b></div>
-  </div>
-  <div class="grid-3">
-    <article class="feature panel"><div class="icon">✓</div><h3>MEMBER</h3><p>Audit bonus: dobel, lebih kasih, kurang kasih, dan member yang belum menerima bonus.</p></article>
-    <article class="feature panel"><div class="icon">N</div><h3>NEW MEMBER</h3><p>Bandingkan tanggal daftar dengan deposit pertama untuk menemukan First Deposit di hari daftar.</p></article>
-    <article class="feature panel"><div class="icon">G</div><h3>GAME</h3><p>Import Excel WIN/LOSE dan urutkan hasil all game member sesuai kebutuhan.</p></article>
-  </div>
-  <div class="panel guide"><h3>Alur kerja yang disarankan</h3><ol><li>Login sebagai admin.</li><li>Menu <b>MEMBER</b>: masukkan data bonus/deposit atau import Excel, lalu proses audit.</li><li>Masukkan daftar new member harian dan data deposit untuk audit First Deposit.</li><li>Kelola daftar Member Safety; ID otomatis muncul di pesan berjalan bawah.</li><li>Menu <b>GAME</b>: upload file Excel WIN/LOSE, pilih game, lalu proses dan export.</li></ol></div>
+</div>
 </section>
 
-<section id="page-member" class="page">
-  <div class="section-head"><div><span class="eyebrow">MEMBER</span><h2>Pengecekan Bonus & Member</h2></div><div class="toolbar"><button class="btn" id="loadDemoBonus">Muat Contoh</button><button class="btn" id="clearBonusInputs">Bersihkan</button></div></div>
-  <div class="panel"><div class="form-grid three"><label>Rate Bonus<select id="bonusRate"><option value="5">5%</option><option value="10">10%</option></select></label><label>Maksimum Bonus<input id="bonusCap" type="number" value="100000" min="0" step="1000"></label><label>Tanggal Audit<input id="bonusDate" type="date"></label></div><div class="three-col"><label>History Deposit / Bonus<textarea id="bonusSource" placeholder="Tempel History Deposit, termasuk transaksi SCB A BONUS DEPOSIT HARIAN."></textarea></label><label>History QR Pay / Deposit<textarea id="depositSource" placeholder="Tempel History Deposit QR Pay seperti hasil copy-paste browser."></textarea></label><label>Status / Pengecualian Member<textarea id="exclusionSource" placeholder="Tempel sumber ketiga yang berisi status/catatan member: SB, NO BONUS, Safety, Safety Bet, NB, BATAL WD, WD DIKEMBALIKAN, MEMBER LANJUT MAIN, Tidak mau bonus, dll."></textarea></label></div><div class="actions"><button id="processBonus" class="btn primary">PROSES & AUDIT BONUS</button><button id="exportBonus" class="btn" disabled>EXPORT AUDIT CSV</button></div><div id="bonusSummary" class="summary">Belum diproses.</div></div><div class="audit-rule"><b>Prioritas audit:</b> status pengecualian diperiksa lebih dahulu. Jika member memiliki SB, NO BONUS, Safety, Safety Bet, NB, BATAL WD, WD DIKEMBALIKAN KE MEMBER, MEMBER LANJUT MAIN, WD DIKEMBALIKAN MEMBER LANJUT MAIN, atau Tidak mau bonus, hasilnya <b>TIDAK DAPAT BONUS</b> dan tidak dihitung sebagai kekurangan bonus.</div>
-  <div class="panel result-panel"><div class="result-head"><h3>Hasil Audit Bonus</h3><div class="chips"><span id="countIssue" class="chip">0 isu</span><span id="countNoBonus" class="chip">0 belum bonus</span><span id="countDouble" class="chip">0 dobel</span><span id="countExcluded" class="chip">0 dikecualikan</span></div></div><div class="table-wrap"><table id="bonusTable"><thead><tr><th>Member</th><th>Tanggal</th><th>Riwayat Deposit</th><th>Basis</th><th>Seharusnya</th><th>Diberikan</th><th>Status</th><th>Keterangan</th></tr></thead><tbody><tr><td colspan="8" class="empty">Belum ada hasil.</td></tr></tbody></table></div></div>
+<section id="bonus" class="page">
+<div class="card">
+<h2>BONUS — Audit Deposit</h2>
+<p class="hint">Tempel hasil copy dari HISTORY QRIS PAY dan HISTORY DEPOSIT. Sistem mencocokkan Username + tanggal transaksi, menghitung bonus yang seharusnya, lalu membandingkan dengan bonus yang tercatat.</p>
+<div class="row">
+<div class="kv"><b>Aturan bonus</b><span><strong>5% dari 1 deposit terbesar per member, maksimal Rp100.000.</strong> Total seluruh deposit TIDAK dijumlahkan.</span></div>
 
-  <div class="section-head compact"><div><span class="eyebrow">NEW MEMBER FIRST DEPOSIT</span><h2>Member daftar & deposit di hari yang sama</h2></div></div>
-  <div class="panel"><div class="two-col"><label>Daftar New Member Harian<textarea id="newMemberSource" placeholder="Contoh: User Name | Date / BEB@Nama | 2026-09-11"></textarea></label><label>Data Deposit QRIS + Manual<textarea id="firstDepositSource" placeholder="Tempel data deposit. QRIS dan manual boleh digabung."></textarea></label></div><div class="actions"><button id="processFirstDeposit" class="btn primary">CEK FIRST DEPOSIT</button><button id="exportFirstDeposit" class="btn" disabled>EXPORT CSV</button></div><div id="firstDepositSummary" class="summary">Belum diproses.</div></div>
-  <div class="panel result-panel"><div class="result-head"><h3>Hasil New Member First Deposit</h3><span id="countFirstDeposit" class="chip">0 ditemukan</span></div><div class="table-wrap"><table id="firstDepositTable"><thead><tr><th>Member</th><th>Tanggal Daftar</th><th>Deposit Pertama</th><th>Tanggal Deposit</th><th>Hari Sama?</th><th>Nominal</th></tr></thead><tbody><tr><td colspan="6" class="empty">Belum ada hasil.</td></tr></tbody></table></div></div>
-
-  <div class="section-head compact"><div><span class="eyebrow">MEMBER SAFETY</span><h2>Daftar Member Safety</h2></div></div>
-  <div class="panel"><div class="form-grid three"><label>ID Member<input id="safetyId" placeholder="BEB@contoh"></label><label>Kategori<select id="safetyCategory"><option>SAFETY BET</option><option>HIGH RISK</option><option>MONITOR</option><option>OTHER</option></select></label><label>Keterangan<input id="safetyNote" placeholder="Catatan"></label></div><div class="actions"><button id="addSafety" class="btn primary">TAMBAH MEMBER SAFETY</button><button id="clearSafety" class="btn">BERSIHKAN</button></div></div>
-  <div class="panel result-panel"><div class="result-head"><h3>Daftar Safety</h3><button id="exportSafety" class="btn">EXPORT CSV</button></div><div class="table-wrap"><table id="safetyTable"><thead><tr><th>ID Member</th><th>Kategori</th><th>Keterangan</th><th>Ditambahkan</th><th>Aksi</th></tr></thead><tbody></tbody></table></div></div>
-
-  <div class="section-head compact"><div><span class="eyebrow">BONUS HARIAN</span><h2>Urutan nominal bonus + ID member</h2></div></div>
-  <div class="panel"><div class="form-grid three"><label>Data Bonus<textarea id="rankingSource" placeholder="Contoh: BEB@A | 25.000\nBEB@B | 100.000"></textarea></label><div class="rank-actions"><button id="processRankingAsc" class="btn primary">TERKECIL → TERBESAR</button><button id="processRankingDesc" class="btn">TERBESAR → TERKECIL</button></div><div id="rankingSummary" class="summary">Belum diproses.</div></div><div class="table-wrap"><table id="rankingTable"><thead><tr><th>No</th><th>ID Member</th><th>Bonus</th></tr></thead><tbody><tr><td colspan="3" class="empty">Belum ada hasil.</td></tr></tbody></table></div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+<div><h3>HISTORY QRIS PAY</h3><textarea id="qrisText" placeholder="Paste data QRPay di sini..."></textarea></div>
+<div><h3>HISTORY DEPOSIT</h3><textarea id="depositText" placeholder="Paste data Deposit History di sini..."></textarea></div>
+</div>
+<div class="row" style="margin-top:12px"><button class="primary" onclick="runBonus()">Analisis BONUS</button><button class="secondary" onclick="clearBonus()">Bersihkan</button></div>
+<div id="bonusStats"></div><div id="bonusResult"></div>
+</div>
 </section>
 
-<section id="page-game" class="page">
-  <div class="section-head"><div><span class="eyebrow">GAME</span><h2>WIN / LOSE ALL GAME MEMBER</h2><p>Import file Excel, proses data, lalu urutkan hasil member.</p></div></div>
-  <div class="panel"><div class="game-upload"><label class="dropzone"><input id="gameFile" type="file" accept=".xlsx,.xls,.csv" multiple><strong>UPLOAD FILE EXCEL</strong><span>Format .xlsx / .xls / .csv — bisa lebih dari satu file</span></label><div id="fileList" class="file-list">Belum ada file.</div></div><div class="form-grid four"><label>Game<select id="gameFilter"><option value="ALL">ALL GAME</option></select></label><label>Mode Urutan<select id="gameSort"><option value="asc">Kalah → Menang</option><option value="desc">Menang → Kalah</option></select></label><label>Minimal Win/Lose<input id="gameMin" type="number" value="0"></label><label>Search Member<input id="gameSearch" placeholder="BEB@..."></label></div><div class="actions"><button id="processGame" class="btn primary">PROSES WIN/LOSE</button><button id="exportGame" class="btn" disabled>EXPORT CSV</button></div><div id="gameSummary" class="summary">Belum ada data.</div></div>
-  <div class="panel result-panel"><div class="result-head"><h3>Hasil WIN/LOSE</h3><div class="chips"><span id="gameLoseCount" class="chip">0 kalah</span><span id="gameWinCount" class="chip">0 menang</span></div></div><div class="table-wrap"><table id="gameTable"><thead><tr><th>ID Member</th><th>Game</th><th>WIN/LOSE</th><th>File/Sumber</th></tr></thead><tbody><tr><td colspan="4" class="empty">Upload file Excel lalu klik proses.</td></tr></tbody></table></div></div>
-  <div class="panel game-list"><h3>Game yang didukung</h3><div id="gameBadges" class="badges"></div></div>
+<section id="first" class="page">
+<div class="card">
+<h2>New Member First Deposit</h2>
+<p class="hint">Tempel HISTORY QRIS PAY, HISTORY DEPOSIT, dan New Member Harian. Sistem mencari member yang mendaftar pada tanggal tersebut lalu memeriksa apakah ada deposit pertama pada hari pendaftaran.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div><h3>HISTORY QRIS PAY</h3><textarea id="fqris" placeholder="Paste QRPay..."></textarea></div>
+<div><h3>HISTORY DEPOSIT</h3><textarea id="fdeposit" placeholder="Paste Deposit History..."></textarea></div>
+</div>
+<div style="margin-top:14px"><h3>NEW MEMBER HARIAN</h3><textarea id="members" placeholder="Paste data New Member Harian. Format terbaik: tanggal + username dalam satu baris/record."></textarea></div>
+<div class="row" style="margin-top:12px"><button class="primary" onclick="runFirst()">Analisis First Deposit</button><button class="secondary" onclick="clearFirst()">Bersihkan</button></div>
+<div id="firstStats"></div><div id="firstResult"></div>
+</div>
 </section>
 </main>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.page).classList.add('active')});
 
-<div class="safety-ticker"><div class="ticker-label">MEMBER SAFETY!!</div><div class="ticker-track"><div id="tickerItems" class="ticker-items"><span>Belum ada Member Safety</span></div></div><div class="ticker-tail">MEMBER SAFETY!!</div></div>
-</div>
-<script src="app.js?v=2.0.0"></script>
-<script src="tests.js?v=2.0.0"></script>
+function money(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:2}).format(n||0)}
+function norm(s){return (s||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9@_.-]/g,'')}
+function dateOnly(s){
+ let m=(s||'').match(/(\\d{1,2})[\\/\\-](\\d{1,2})[\\/\\-](\\d{4})/); if(m)return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+ return null;
+}
+function num(s){if(s==null)return 0; let x=String(s).replace(/[^0-9.,-]/g,'').replace(/\\.(?=\\d{3}(?:\\D|$))/g,'').replace(',','.'); let n=parseFloat(x); return isFinite(n)?n:0}
+function extractRecords(raw, mode){
+ const s=raw.replace(/\\r/g,'');
+ const users=[...s.matchAll(/BEB@([A-Za-z0-9_.-]+)/gi)].map(m=>({user:m[1],pos:m.index}));
+ const out=[];
+ for(let i=0;i<users.length;i++){
+   const a=users[i], b=users[i+1], chunk=s.slice(a.pos,b?b.pos:s.length);
+   const ds=chunk.match(/(\\d{1,2}\\/\\d{1,2}\\/\\d{4}\\s+\\d{1,2}:\\d{2}:\\d{2}\\s*(?:AM|PM))/i);
+   const d=ds?ds[1]:null;
+   let amount=0;
+   if(mode==='qris'){
+     // Amount is normally followed by Reference; tolerate compact copied text.
+     const am=chunk.match(/(?:mariobola_oauser\\s*)([-\\d.,]+)/i);
+     if(am) amount=num(am[1]);
+     else {const all=[...chunk.matchAll(/\\b\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?\\b/g)]; if(all.length) amount=num(all[Math.min(1,all.length-1)][0]);}
+   } else {
+     // Bonus rows contain SCB A BONUS ... followed by the bonus amount.
+     const bm=chunk.match(/SCB\\s*A\\s*BONUS[^\\d]{0,80}(\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\d+(?:,\\d+)?)/i);
+     if(bm) amount=num(bm[1]);
+     else {
+       const free=chunk.match(/FREEBET[^\\d]{0,80}(\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\d+(?:,\\d+)?)/i);
+       if(free) amount=num(free[1]);
+     }
+   }
+   const remark=(chunk.match(/BONUS[^\\n]{0,100}/i)||[])[0]||'';
+   out.push({user,date:d,dateKey:dateOnly(d),amount,remark,raw:chunk.slice(0,500)});
+ }
+ return out.filter(x=>x.user);
+}
+function classify(expected,given,count){
+ const tol=parseFloat($('tolerance').value)||0.01;
+ if(count>1)return ['danger','DOUBLE BONUS'];
+ if(given===0)return ['pending','BELUM DIBERIKAN'];
+ if(Math.abs(given-expected)<=tol)return ['ok','SUDAH DIBERIKAN — COCOK'];
+ return ['warn',given>expected?'KELEBIHAN BONUS':'KEKURANGAN BONUS'];
+}
+function runBonus(){
+ const q=extractRecords($('qrisText').value,'qris'), d=extractRecords($('depositText').value,'deposit');
+ const rate=0.05, cap=100000;
+
+ // IMPORTANT:
+ // A member is evaluated using ONLY the largest QRPay deposit for that member
+ // (prefer same-day grouping when dates are available). Other deposits are not
+ // added to the bonus base.
+ const byUser=new Map();
+ q.forEach(x=>{
+   const k=norm(x.user);
+   if(!byUser.has(k))byUser.set(k,[]);
+   byUser.get(k).push(x);
+ });
+
+ const rows=[];
+ for(const [k,arr] of byUser){
+   const valid=arr.filter(x=>x.amount>0);
+   if(!valid.length)continue;
+   const largest=valid.reduce((a,b)=>b.amount>a.amount?b:a);
+   const expected=Math.min(largest.amount*rate,cap);
+
+   // All bonus transactions for this member are considered together.
+   // We do NOT call a member "BELUM DIBERIKAN" if any bonus has already
+   // been posted. Instead, compare posted bonus against the expected bonus
+   // and report SHORT / EXCESS / DOUBLE.
+   const sameUserBonuses=d.filter(y=>norm(y.user)===k && y.amount>0);
+   const given=sameUserBonuses.reduce((a,b)=>a+b.amount,0);
+   const tol=0.01;
+
+   let cls, label;
+   if(sameUserBonuses.length===0){
+      cls='pending'; label='BELUM DIBERIKAN';
+   }else if(sameUserBonuses.length>1){
+      // Multiple bonus records: this is a double/multiple bonus situation.
+      if(Math.abs(given-expected)<=tol){
+         cls='danger'; label='DOUBLE BONUS — NOMINAL TOTAL COCOK';
+      }else if(given<expected){
+         cls='warn'; label=`DOUBLE BONUS + KEKURANGAN ${money(expected-given)}`;
+      }else{
+         cls='danger'; label=`DOUBLE BONUS + KELEBIHAN ${money(given-expected)}`;
+      }
+   }else if(Math.abs(given-expected)<=tol){
+      cls='ok'; label='SUDAH DIBERIKAN — COCOK';
+   }else if(given<expected){
+      cls='warn'; label=`KEKURANGAN ${money(expected-given)}`;
+   }else{
+      cls='warn'; label=`KELEBIHAN ${money(given-expected)}`;
+   }
+
+   rows.push({user:largest.user, largest, allDeposits:valid, expected, given, sameUserBonuses, cls, label});
+ }
+
+ const counts={ok:0,danger:0,warn:0,pending:0};rows.forEach(r=>counts[r.cls]++);
+ $('bonusStats').innerHTML=`<div class="stats">
+ <div class="stat"><b>${q.length}</b><span>QRPay records</span></div>
+ <div class="stat"><b>${d.length}</b><span>Deposit records</span></div>
+ <div class="stat"><b>${rows.length}</b><span>Member dianalisis</span></div>
+ <div class="stat"><b>${counts.ok}</b><span>Cocok</span></div>
+ <div class="stat"><b>${counts.danger+counts.warn+counts.pending}</b><span>Perlu tindakan</span></div></div>`;
+
+ let h=`<div class="card"><div class="hint"><strong>Aturan aktif:</strong> hanya 1 deposit terbesar per member yang menjadi dasar bonus. Deposit lain tidak dijumlahkan. Jika bonus sudah pernah diberikan tetapi nominalnya berasal dari deposit yang lebih kecil, hasilnya tetap <strong>KEKURANGAN/KELEBIHAN</strong>, bukan BELUM DIBERIKAN.</div></div>`;
+ h+=`<div class="table-wrap"><table><thead><tr>
+ <th>Username</th><th>Deposit Terbesar</th><th>Bonus Seharusnya</th><th>Bonus Diberikan</th><th>Keterangan</th><th>Waktu Pemberian</th>
+ </tr></thead><tbody>`;
+
+ rows.sort((a,b)=>b.largest.amount-a.largest.amount).forEach(r=>{
+   const times=r.sameUserBonuses.map(y=>y.date||'-').join('<br>')||'-';
+   h+=`<tr class="${r.cls}">
+    <td><b>${r.user}</b><br><small class="muted">Semua deposit: ${r.allDeposits.map(x=>money(x.amount)).join(' + ')}</small></td>
+    <td><b>${money(r.largest.amount)}</b><br><small class="muted">${r.largest.date||'-'}</small></td>
+    <td>${money(r.expected)}</td>
+    <td>${money(r.given)}</td>
+    <td><span class="badge b-${r.cls}">${r.label}</span></td>
+    <td>${times}</td>
+   </tr>`;
+ });
+ h+='</tbody></table></div>';
+ $('bonusResult').innerHTML=h;
+}
+function clearBonus(){['qrisText','depositText'].forEach(id=>$(id).value='');$('bonusResult').innerHTML='';$('bonusStats').innerHTML=''}
+function parseMembers(raw){
+ const out=[]; const re=/((?:\\d{1,2}\\/\\d{1,2}\\/\\d{4})|(?:\\d{4}-\\d{2}-\\d{2}))[\\s\\S]{0,120}?BEB@([A-Za-z0-9_.-]+)/gi;
+ for(const m of raw.matchAll(re))out.push({dateKey:dateOnly(m[1])||m[1],user:m[2]});
+ if(!out.length){
+   for(const line of raw.split(/\\n+/)){const m=line.match(/(\\d{1,2}\\/\\d{1,2}\\/\\d{4}).*?([A-Za-z0-9_.-]{3,})/);if(m)out.push({dateKey:dateOnly(m[1]),user:m[2].replace(/^BEB@/i,'')})}
+ }
+ return out;
+}
+function runFirst(){
+ const q=extractRecords($('fqris').value,'qris'), d=extractRecords($('fdeposit').value,'deposit'), m=parseMembers($('members').value);
+ const rows=m.map((mem,i)=>{
+   const qd=q.filter(x=>norm(x.user)===norm(mem.user)&&x.dateKey===mem.dateKey).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+   const dep=qd[0]; const free=d.filter(x=>norm(x.user)===norm(mem.user)&&x.dateKey===mem.dateKey&&/FREEBET/i.test(x.remark));
+   return {no:i+1,mem,dep,free:free.reduce((a,b)=>a+b.amount,0)};
+ });
+ const found=rows.filter(x=>x.dep);
+ $('firstStats').innerHTML=`<div class="stats"><div class="stat"><b>${rows.length}</b><span>New Member</span></div><div class="stat"><b>${found.length}</b><span>First Deposit hari yang sama</span></div><div class="stat"><b>${rows.length-found.length}</b><span>Belum deposit</span></div><div class="stat"><b>${money(rows.reduce((a,b)=>a+(b.dep?.amount||0),0))}</b><span>Total first deposit</span></div></div>`;
+ let h=`<div class="table-wrap"><table><thead><tr><th>NO</th><th>REGISTER DATE</th><th>USER ID / USERNAME</th><th>DEPOSIT</th><th>FREEBET</th></tr></thead><tbody>`;
+ rows.forEach(r=>{const cls=r.dep?'ok':'pending';h+=`<tr class="${cls}"><td>${r.no}</td><td>${r.mem.dateKey}</td><td><b>${r.mem.user}</b></td><td>${r.dep?money(r.dep.amount):money(0)}</td><td>${money(r.free)}</td></tr>`});h+='</tbody></table></div>';$('firstResult').innerHTML=h;
+}
+function clearFirst(){['fqris','fdeposit','members'].forEach(id=>$(id).value='');$('firstResult').innerHTML='';$('firstStats').innerHTML=''}
+</script>
 </body>
 </html>
