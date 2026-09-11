@@ -1,12 +1,9 @@
-[Uploading README.md…]()
-# MARIOBOLA Support Tools v2
+[README.md](https://github.com/user-attachments/files/32131917/README.md)
+# MARIOBOLA Support Tools v4 FINAL
 
-## Bonus rule
-- Bonus = 5% of the **largest single deposit** made by each member.
-- Maximum bonus = **Rp100.000**.
-- Deposits are **not summed**.
-- If a member deposits multiple times, only the largest deposit is used as the bonus base.
-- If a bonus was already given from a smaller deposit, the tool compares the bonus already given with the correct bonus for the largest deposit and reports **KEKURANGAN** or **KELEBIHAN** rather than marking the member as "BELUM DIBERIKAN".
-- If more than one bonus transaction exists for the same member, it is flagged as **DOUBLE BONUS**.
+Modules:
+1. New Member — opens the official registration form in a new tab.
+2. BONUS — parses HISTORY QRIS PAY + HISTORY DEPOSIT; uses the largest deposit per username, 5% bonus, maximum Rp100,000; detects matching, double bonus, shortage, excess, and not-yet-given. Includes search, status filters, Copy, CSV, and Excel-compatible XLS export.
+3. New Member First Deposit — matches New Member Harian + QRPay + Deposit History by username and registration date; selects the first QRPay deposit of that day and sums FREEBET remarks for that day. Includes search, Copy, CSV, and Excel-compatible XLS export.
 
-The data is processed locally in the browser.
+All processing is local in the browser. No external API is required.
