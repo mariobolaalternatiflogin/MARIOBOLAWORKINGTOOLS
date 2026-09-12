@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MARIOBOLA Support Tools v3</title>
+<title>MARIOBOLA Support Tools</title>
 <style>
 :root{--bg:#07101f;--panel:#0e182c;--panel2:#14233d;--line:#273a5d;--text:#eef4ff;--muted:#9eb0d0;--accent:#6ea8fe}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top right,#172b51 0,#07101f 45%,#050b15 100%);color:var(--text)}
@@ -24,51 +24,7 @@ button.primary,.btn{background:var(--accent);color:#06101f;border:0;border-radiu
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.toolbar input{min-width:220px}.filter-btn.active{outline:2px solid #fff}.export{background:#263957;color:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 15px;cursor:pointer}.small{font-size:11px}.nowrap{white-space:nowrap}.empty{padding:22px;text-align:center;color:var(--muted)}.totals{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.pill{border:1px solid var(--line);background:#0a1425;border-radius:999px;padding:7px 10px;font-size:12px}.source-count{font-size:12px;color:var(--muted);margin-top:8px}</style>
 </head>
 <body>
-<header><h1>MARIOBOLA Support Tools v3</h1><div class="sub">New Member • BONUS Audit • New Member First Deposit</div></header>
-<nav>
-<button class="active" data-page="register">1. New Member</button>
-<button data-page="bonus">2. BONUS</button>
-<button data-page="first">3. New Member First Deposit</button>
-</nav>
-<main>
-<section id="register" class="page active">
-<div class="card">
-<h2>Daftar New Member</h2>
-<p class="hint">Tools ini tidak mencoba menyalin atau melewati CAPTCHA, anti-CSRF, session, atau validasi situs pendaftaran. Karena itu tombol di bawah membuka form resmi MARIOBOLA di tab baru.</p>
-<div class="row"><a href="https://mariobola2026.me/_View/Register.aspx" target="_blank" rel="noopener noreferrer"><button class="primary">Buka Form Pendaftaran MARIOBOLA</button></a></div>
-</div>
-<div class="card"><h3>Catatan</h3><div class="note">Untuk saat ini pendaftaran langsung di dalam tools tidak dilakukan. Integrasi aman adalah membuka URL resmi. Jika suatu saat tersedia API/endpoint resmi dari sistem pendaftaran, modul ini bisa diintegrasikan tanpa mengakali proteksi situs.</div></div>
-</section>
-
-<section id="bonus" class="page">
-<div class="card">
-<h2>BONUS — Audit Deposit</h2>
-<p class="hint"><b>Aturan:</b> bonus = 5% dari <b>1 deposit terbesar per member</b>, maksimum Rp100.000. Semua deposit lain tidak dijumlahkan. Jika bonus sudah pernah diberikan dari deposit yang lebih kecil, status menjadi <b>KEKURANGAN/KELEBIHAN</b>, bukan BELUM DIBERIKAN. Jika ada lebih dari satu transaksi bonus untuk member yang sama, status <b>DOUBLE BONUS</b>.</p>
-<div class="grid2">
-<div><h3>HISTORY QRIS PAY</h3><textarea id="qrisText" placeholder="Paste hasil copy Chrome dari Deposit Request History (QRPay)..."></textarea></div>
-<div><h3>HISTORY DEPOSIT</h3><textarea id="depositText" placeholder="Paste hasil copy Chrome dari Deposit Request History..."></textarea></div>
-</div>
-<div class="row" style="margin-top:12px"><button class="primary" id="runBonusBtn">Analisis BONUS</button><button class="btn2" id="clearBonusBtn">Bersihkan</button></div>
-<div id="bonusStats"></div><div id="bonusResult"></div>
-</div>
-</section>
-
-<section id="first" class="page">
-<div class="card">
-<h2>New Member First Deposit</h2>
-<p class="hint">Masukkan 3 sumber. Sistem mengambil member yang terdaftar pada tanggal tersebut, mencari deposit QRPay pada <b>tanggal yang sama</b>, mengambil <b>deposit pertama secara waktu</b>, lalu membaca FREEBET dari HISTORY DEPOSIT pada tanggal tersebut.</p>
-<div class="grid2">
-<div><h3>HISTORY QRIS PAY</h3><textarea id="fqris" placeholder="Paste QRPay..."></textarea></div>
-<div><h3>HISTORY DEPOSIT</h3><textarea id="fdeposit" placeholder="Paste Deposit History..."></textarea></div>
-</div>
-<div style="margin-top:14px"><h3>NEW MEMBER HARIAN</h3><textarea id="members" placeholder="Paste tabel New Member Harian seperti contoh yang Anda kirim..."></textarea></div>
-<div class="row" style="margin-top:12px"><button class="primary" id="runFirstBtn">Analisis First Deposit</button><button class="btn2" id="clearFirstBtn">Bersihkan</button></div>
-<div id="firstStats"></div><div id="firstResult"></div>
-</div>
-</section>
-</main>
-<body>
-<header><h1>MARIOBOLA Support Tools v4 FINAL</h1><div class="sub">New Member • BONUS Audit • New Member First Deposit • Local processing</div></header>
+<header><h1>MARIOBOLA Support Tools</h1><div class="sub">New Member • BONUS Audit • New Member First Deposit</div></header>
 <nav>
 <button class="active" data-page="register">1. New Member</button>
 <button data-page="bonus">2. BONUS</button>
