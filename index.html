@@ -180,6 +180,7 @@ function parseInternationalAmount(t){let s=String(t??'').trim().replace(/[^0-9.,
   else if(dots){ const parts=s.split('.'); if(parts.length>2 || (parts.length===2 && parts[1].length===3)) s=s.replace(/\./g,''); }
   const n=Number(s);return Number.isFinite(n)?n:0}
 function norm(s){return String(s||'').toLowerCase().replace(/^beb@/,'').replace(/\s+/g,'').replace(/[^a-z0-9@_.-]/g,'')}
+function agentUser(s){const v=String(s||'').trim();return /^beb@/i.test(v)?'BEB@'+v.slice(4):('BEB@'+v)}
 function dateOnly(s){const m=String(s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:null}
 function timeValue(s){const m=String(s||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);if(!m)return 0;let h=+m[4],sec=+(m[6]||0);const ap=(m[7]||'').toUpperCase();if(ap){h=h%12+(ap==='PM'?12:0)}return new Date(+m[3],+m[2]-1,+m[1],h,+m[5],sec).getTime()}
 function floorBonusAmount(n){const v=Math.max(0,Number(n)||0);const k=Math.floor(v/1000)*1000;const r=v-k;return k+(r>=500?500:0)}
@@ -344,7 +345,7 @@ function renderFirst(){
   if(!rows.length)h='<div class="empty">Tidak ada data yang sesuai pencarian.</div>';
   else{
     h=`<div class="table-wrap"><table><thead><tr><th>NO</th><th>REGISTER DATE</th><th>USER ID / USERNAME</th><th>DEPOSIT</th><th>FREEBET</th></tr></thead><tbody>`;
-    rows.forEach(r=>h+=`<tr class="${r.deposit?'ok':'pending'}"><td>${r.no}</td><td>${r.register}</td><td><span class="audit-user">${esc(r.user)}</span></td><td>${r.deposit?`<span class="audit-amount">${money(r.deposit)}</span>`:'<span class="zero">Rp 0.00</span>'}</td><td><span class="zero">Rp 0.00</span></td></tr>`);
+    rows.forEach(r=>h+=`<tr class="${r.deposit?'ok':'pending'}"><td>${r.no}</td><td>${r.register}</td><td><span class="audit-user">${esc(agentUser(r.user))}</span></td><td>${r.deposit?`<span class="audit-amount">${money(r.deposit)}</span>`:'<span class="zero">Rp 0.00</span>'}</td><td><span class="zero">Rp 0.00</span></td></tr>`);
     h+='</tbody></table></div>';
   }
   $('firstResult').innerHTML=h;
@@ -450,7 +451,10 @@ function parseTableTransactions(raw,type){
     if(!line)continue;
     const date=transactionDateText(line);
     if(!date)continue;
-    const amount=transactionAmount(line,type);
+    let amount=transactionAmount(line,type);
+    // Withdraw History values are displayed at a 1:1000 scale for this report.
+    // 500.00 -> 500,000; 1,000.00 -> 1,000,000.
+    if(type==='withdraw' && amount>0) amount=Math.round(amount*1000);
     if(!(amount>0))continue;
     const joined=[lines[i-1]||'',line,lines[i+1]||''].join(' ');
     const lowLine=line.toLowerCase();
@@ -514,7 +518,7 @@ function renderDaily(){
   else{
     h+=`<div class="table-wrap"><table style="min-width:620px"><thead><tr><th>Username</th><th>Nominal Bonus</th><th>Waktu</th><th>Keterangan</th></tr></thead><tbody>`;
     rows.forEach(r=>{
-      const c=counts[norm(r.user)]||1, label=c>1?`${esc(r.user)} <span class="badge b-danger">${c}x+</span>`:esc(r.user);
+      const c=counts[norm(r.user)]||1, fullUser=agentUser(r.user), label=c>1?`${esc(fullUser)} <span class="badge b-danger">${c}x+</span>`:esc(fullUser);
       h+=`<tr class="${c>1?'danger':'ok'}"><td><span class="audit-user">${label}</span></td><td><span class="audit-amount">${String(Math.round(r.amount))}</span></td><td>${esc(r.date||'-')}</td><td>${c>1?'<span class="badge b-danger">DOUBLE BONUS</span>':'<span class="badge b-ok">BONUS HARIAN</span>'}</td></tr>`;
     });
     h+='</tbody></table></div>';
@@ -524,7 +528,7 @@ function renderDaily(){
 function dailyCopyData(){
   const counts={};dailyRows.forEach(r=>{counts[norm(r.user)]=(counts[norm(r.user)]||0)+1});
   const rows=[...dailyRows].sort((a,b)=>a.user.localeCompare(b.user,undefined,{sensitivity:'base'}));
-  return rows.map(r=>[r.user,String(Math.round(r.amount))]);
+  return rows.map(r=>[agentUser(r.user),String(Math.round(r.amount))]);
 }
 
 /* =========================
@@ -567,7 +571,8 @@ function renderReport(){
   const totalDP=dep.reduce((s,x)=>s+x.amount,0), totalWD=wd.reduce((s,x)=>s+x.amount,0), totalBonus=bonusFiltered.reduce((s,x)=>s+x.amount,0);
   const lastDP=latestTransaction(dep),lastWD=latestTransaction(wd);
   const [cls,status]=reportStatus(totalDP,totalWD,totalBonus);
-  const id=$('memberId').value.trim()||'-';
+  const rawId=$('memberId').value.trim();
+  const id=rawId?agentUser(rawId):'-';
   const web=$('memberWeb').value.trim()||'MARIOBOLA';
   const balance=$('memberBalance').value.trim()||'-';
   const text=[
@@ -637,7 +642,9 @@ const hd=extractDeposit(history);if(hd.length!==2||hd[0].category!=='DEPOSIT'||h
 const batal='BEB@TestBatal\nBCA\nX\n**50.000** | 17891724390297766 | 12/09/2026 08:20:39 AM | BATAL WD | Confirmed';const bw=extractDeposit(batal);if(bw.length!==1||bw[0].category!=='BATAL_WD'||bw[0].bonus)throw new Error('BATAL WD classification failed');
 if(floorBonusAmount(1250)!==1000||floorBonusAmount(12750)!==12500||floorBonusAmount(25890)!==25500)throw new Error('Bonus floor rounding failed');
 const wh='# Withdraw History\nTotal Records: 14 Total Amount: 5,390.00\n| 1 | BEB@omenbego | BCA | Osep | 6891008578 | 07/09/2026 01:44 | 500.00 | 500.69 | 0.69 | Member Withdraw | Confirmed | 07/09/2026 01:45 | | beb@wahyupu (ABD)\n| 2 | BEB@omenbego | BCA | Osep | 6891008578 | 20/08/2026 22:02 | 467.00 | 500.19 | 33.19 | Member Withdraw | Confirmed | 20/08/2026 22:04 | | beb@wahyupu (ABD)';
-const wp=parseTableTransactions(wh,'withdraw');if(wp.length!==2||wp[0].amount!==500||wp[1].amount!==467)throw new Error('Withdraw amount-after-date parser failed');
+const wp=parseTableTransactions(wh,'withdraw');if(wp.length!==2||wp[0].amount!==500000||wp[1].amount!==467000)throw new Error('Withdraw amount-after-date x1000 parser failed');
+if(agentUser('omenbego')!=='BEB@omenbego'||agentUser('BEB@Atikkk')!=='BEB@Atikkk')throw new Error('Agent username prefix failed');
+const sampleStatus=reportStatus(9224000,5390000,148500);if(sampleStatus[2]!==3685500)throw new Error('Report status arithmetic failed');
 return 'PASS'};
 try{window.__selfTest();console.info('MARIOBOLA Support Tools self-test: PASS')}catch(e){console.error('Self-test failed',e)}
 </script></body></html>
