@@ -407,6 +407,16 @@ function transactionDateText(line){
   const m=String(line||'').match(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/i);
   return m?m[0]:'';
 }
+function amountCandidatesAfterDate(line){
+  const s=String(line||'').replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
+  const dm=transactionDateText(s);
+  if(!dm)return [];
+  const pos=s.indexOf(dm);
+  if(pos<0)return [];
+  const after=s.slice(pos+dm.length);
+  const matches=[...after.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
+  return matches.map(m=>({token:m[1],index:m.index})).filter(x=>!String(x.token).includes('/'));
+}
 function amountCandidatesBeforeDate(line){
   const s=String(line||'').replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
   const dm=transactionDateText(s);
@@ -415,9 +425,16 @@ function amountCandidatesBeforeDate(line){
   const matches=[...before.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
   return matches.map(m=>({token:m[1],index:m.index})).filter(x=>!String(x.token).includes('/'));
 }
-function transactionAmount(line){
-  const c=amountCandidatesBeforeDate(line);
-  return c.length?parseMoneyToken(c[c.length-1].token):0;
+function transactionAmount(line,type='deposit'){
+  // Withdraw History places Withdraw Amount AFTER Date/Time. This is
+  // intentionally different from Deposit History, where the amount is often
+  // before the transaction date and account numbers can appear earlier.
+  if(type==='withdraw'){
+    const after=amountCandidatesAfterDate(line);
+    if(after.length)return parseMoneyToken(after[0].token);
+  }
+  const before=amountCandidatesBeforeDate(line);
+  return before.length?parseMoneyToken(before[before.length-1].token):0;
 }
 function detectGame(text){
   const s=String(text||'').toUpperCase().replace(/\s+/g,' ');
@@ -433,11 +450,11 @@ function parseTableTransactions(raw,type){
     if(!line)continue;
     const date=transactionDateText(line);
     if(!date)continue;
-    const amount=transactionAmount(line);
+    const amount=transactionAmount(line,type);
     if(!(amount>0))continue;
     const joined=[lines[i-1]||'',line,lines[i+1]||''].join(' ');
-    const low=joined.toLowerCase();
-    if(/\btotal\b|\btotal records\b|\btotal amount\b/.test(low))continue;
+    const lowLine=line.toLowerCase();
+    if(/\btotal records\b|\btotal amount\b/.test(lowLine))continue;
     const category=type==='deposit'?depositHistoryCategory(joined):'WITHDRAW';
     if(type==='deposit' && category!=='DEPOSIT')continue;
     if(type==='withdraw' && !/(withdraw|wd\b|withdrawal|cashout)/i.test(joined) && type==='withdraw') {
@@ -498,7 +515,7 @@ function renderDaily(){
     h+=`<div class="table-wrap"><table style="min-width:620px"><thead><tr><th>Username</th><th>Nominal Bonus</th><th>Waktu</th><th>Keterangan</th></tr></thead><tbody>`;
     rows.forEach(r=>{
       const c=counts[norm(r.user)]||1, label=c>1?`${esc(r.user)} <span class="badge b-danger">${c}x+</span>`:esc(r.user);
-      h+=`<tr class="${c>1?'danger':'ok'}"><td><span class="audit-user">${label}</span></td><td><span class="audit-amount">${indoMoney(r.amount)}</span></td><td>${esc(r.date||'-')}</td><td>${c>1?'<span class="badge b-danger">DOUBLE BONUS</span>':'<span class="badge b-ok">BONUS HARIAN</span>'}</td></tr>`;
+      h+=`<tr class="${c>1?'danger':'ok'}"><td><span class="audit-user">${label}</span></td><td><span class="audit-amount">${String(Math.round(r.amount))}</span></td><td>${esc(r.date||'-')}</td><td>${c>1?'<span class="badge b-danger">DOUBLE BONUS</span>':'<span class="badge b-ok">BONUS HARIAN</span>'}</td></tr>`;
     });
     h+='</tbody></table></div>';
   }
@@ -507,7 +524,7 @@ function renderDaily(){
 function dailyCopyData(){
   const counts={};dailyRows.forEach(r=>{counts[norm(r.user)]=(counts[norm(r.user)]||0)+1});
   const rows=[...dailyRows].sort((a,b)=>a.user.localeCompare(b.user,undefined,{sensitivity:'base'}));
-  return rows.map(r=>[`${r.user}${counts[norm(r.user)]>1?' 2x+':''}`,indoMoney(r.amount)]);
+  return rows.map(r=>[r.user,String(Math.round(r.amount))]);
 }
 
 /* =========================
@@ -618,6 +635,9 @@ window.__selfTest=function(){const qr='BEB@TestUserBCA\nNama\n123456BCA\nPrabuPa
 const history='BEB@Marzuki\nBCA Marsuki 3890594688\nBCA YANA 6125279965\n**200.000** | 12/09/2026 12:07:40 AM | Agent Deposit | Confirmed\nBEB@Marzuki\nBCA Marsuki 3890594688\nSCB A BONUS DEPOSIT HARIAN 01\n**10.000** | 12/09/2026 12:07:51 AM | Agent Deposit | Confirmed';
 const hd=extractDeposit(history);if(hd.length!==2||hd[0].category!=='DEPOSIT'||hd[0].amount!==200000||hd[0].bonus)throw new Error('Plain HISTORY DEPOSIT classification failed');if(hd[1].category!=='BONUS_DEPOSIT'||hd[1].amount!==10000||!hd[1].bonus)throw new Error('SCB bonus HISTORY DEPOSIT classification failed');
 const batal='BEB@TestBatal\nBCA\nX\n**50.000** | 17891724390297766 | 12/09/2026 08:20:39 AM | BATAL WD | Confirmed';const bw=extractDeposit(batal);if(bw.length!==1||bw[0].category!=='BATAL_WD'||bw[0].bonus)throw new Error('BATAL WD classification failed');
-if(floorBonusAmount(1250)!==1000||floorBonusAmount(12750)!==12500||floorBonusAmount(25890)!==25500)throw new Error('Bonus floor rounding failed');return 'PASS'};
+if(floorBonusAmount(1250)!==1000||floorBonusAmount(12750)!==12500||floorBonusAmount(25890)!==25500)throw new Error('Bonus floor rounding failed');
+const wh='# Withdraw History\nTotal Records: 14 Total Amount: 5,390.00\n| 1 | BEB@omenbego | BCA | Osep | 6891008578 | 07/09/2026 01:44 | 500.00 | 500.69 | 0.69 | Member Withdraw | Confirmed | 07/09/2026 01:45 | | beb@wahyupu (ABD)\n| 2 | BEB@omenbego | BCA | Osep | 6891008578 | 20/08/2026 22:02 | 467.00 | 500.19 | 33.19 | Member Withdraw | Confirmed | 20/08/2026 22:04 | | beb@wahyupu (ABD)';
+const wp=parseTableTransactions(wh,'withdraw');if(wp.length!==2||wp[0].amount!==500||wp[1].amount!==467)throw new Error('Withdraw amount-after-date parser failed');
+return 'PASS'};
 try{window.__selfTest();console.info('MARIOBOLA Support Tools self-test: PASS')}catch(e){console.error('Self-test failed',e)}
 </script></body></html>
