@@ -271,14 +271,14 @@ function parseMembers(raw){
     const dm=line.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
     if(!um||!dm)continue;
     const tm=line.match(/(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?)/i);
-    out.push({dateKey:dateOnlyUS(dm[1]),date:dm[1],user:um[1],time:tm?timeValue(tm[1]):0});
+    out.push({dateKey:dateOnlyUS(dm[1]),date:tm?tm[1]:dm[1],user:agentUser(um[1]),time:tm?timeValue(tm[1]):0});
   }
   if(!out.length){
     const re=/BEB@([A-Za-z0-9_.-]+)/gi;
     for(const m of s.matchAll(re)){
       const chunk=s.slice(Math.max(0,m.index-180),Math.min(s.length,m.index+300));
       const dm=chunk.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-      if(dm)out.push({dateKey:dateOnlyUS(dm[1]),date:dm[1],user:m[1],time:timeValue((chunk.match(/(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?)/i)||[])[1]||'')});
+      if(dm){const mt=(chunk.match(/(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?)/i)||[])[1]||'';out.push({dateKey:dateOnlyUS(dm[1]),date:mt||dm[1],user:agentUser(m[1]),time:timeValue(mt)});}
     }
   }
   const seen=new Set();
@@ -345,7 +345,7 @@ function renderFirst(){
   if(!rows.length)h='<div class="empty">Tidak ada data yang sesuai pencarian.</div>';
   else{
     h=`<div class="table-wrap"><table><thead><tr><th>NO</th><th>REGISTER DATE</th><th>USER ID / USERNAME</th><th>DEPOSIT</th><th>FREEBET</th></tr></thead><tbody>`;
-    rows.forEach(r=>h+=`<tr class="${r.deposit?'ok':'pending'}"><td>${r.no}</td><td>${r.register}</td><td><span class="audit-user">${esc(agentUser(r.user))}</span></td><td>${r.deposit?`<span class="audit-amount">${money(r.deposit)}</span>`:'<span class="zero">Rp 0.00</span>'}</td><td><span class="zero">Rp 0.00</span></td></tr>`);
+    rows.forEach(r=>h+=`<tr class="${r.deposit?'ok':'pending'}"><td>${r.no}</td><td>${esc(r.register)}</td><td><span class="audit-user">${esc(agentUser(r.user))}</span></td><td>${r.deposit?`<span class="audit-amount">${money(r.deposit)}</span>`:'<span class="zero">Rp 0.00</span>'}</td><td><span class="zero">Rp 0.00</span></td></tr>`);
     h+='</tbody></table></div>';
   }
   $('firstResult').innerHTML=h;
