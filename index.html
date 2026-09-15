@@ -280,7 +280,8 @@ function extractQR(raw){
       dateKey:dateOnly(d),
       time:timeValue(d),
       amount,
-      raw:seg.row
+      raw:seg.row,
+      sourceBefore:seg.before
     });
   }
   return out.filter(x=>x.user&&x.amount>0);
@@ -305,7 +306,12 @@ function extractDeposit(raw){
   for(const seg of datedHistorySegments(raw)){
     if(!seg.user)continue;
     const d=seg.date;
-    const category=depositHistoryCategory(seg.row);
+    let category=depositHistoryCategory(seg.before);
+    // Some HISTORY DEPOSIT rows place the classification after the date
+    // (for example BATAL WD). Only inspect the after-date fragment for
+    // withdrawal/cancellation markers so the next row cannot contaminate
+    // SCB A bonus detection.
+    if(category==='DEPOSIT' && /BATAL\s+WD|WITHDRAW(?:AL)?|WD\s+DIKEMBALIKAN|WD\s+DIBATALKAN/i.test(seg.after)) category='BATAL_WD';
     let amount=0;
 
     if(category==='BONUS_DEPOSIT'){
@@ -677,7 +683,8 @@ function parseReportDepositRows(raw){
       amount,
       game:detectGame(seg.row),
       type:'deposit',
-      raw:seg.row
+      raw:seg.row,
+      sourceBefore:seg.before
     });
   }
   return out;
@@ -703,15 +710,22 @@ function reportStatus(dp,wd,bonus){
 }
 function renderReport(){
   const range=threeMonthRange();
-  const dep=filteredReportRows('deposit',range), wd=filteredReportRows('withdraw',range);
-  // For LAPORAN WITHDRAW only: TOTAL DP is the sum of every deposit-history
-  // row in range, including SCB A/B/C/D, bonus/freebet rows and rows carrying
-  // remarks. TOTAL BONUS is reported separately from explicit bonus categories
-  // so the source is never silently discarded.
-  const bonus=dep.filter(x=>/(SCB\s*[A-D]\b|BONUS|FREEBET)/i.test(x.raw||''));
+  // LAPORAN WITHDRAW:
+  // TOTAL DP = SEMUA baris dari HISTORY DEPOSIT dalam rentang 3 bulan,
+  // tanpa mengecualikan metode/channel apa pun (bank, e-wallet, QRIS,
+  // GarudaPay, PrabuPay, SCB A/B/C/D, bonus, freebet, dll).
+  // Filter Game TIDAK boleh mengurangi TOTAL DP karena angka harus sama
+  // dengan TOTAL AMOUNT pada data HISTORY DEPOSIT yang ditempel.
+  const dep=reportRows.deposit.filter(r=>inRange(r.dateKey,range));
+  const wd=filteredReportRows('withdraw',range);
+  // TOTAL BONUS hanya menjumlahkan baris yang secara eksplisit mengandung
+  // frasa "SCB A BONUS DEPOSIT HARIAN". Tidak termasuk SCB B/C/D, bonus lain,
+  // FREEBET, atau kategori BONUS lainnya.
+  const bonus=dep.filter(x=>/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN/i.test(x.sourceBefore||x.raw||''));
+  const totalDP=dep.reduce((sum,row)=>sum+row.amount,0);
+  const totalWD=wd.reduce((sum,row)=>sum+row.amount,0);
+  const totalBonus=bonus.reduce((sum,row)=>sum+row.amount,0);
   const selected=getSelectedGames();
-  const bonusFiltered=(!selected.length||selected.includes('ALL'))?bonus:bonus.filter(x=>selected.includes(detectGame(x.raw)));
-  const totalDP=dep.reduce((s,x)=>s+x.amount,0), totalWD=wd.reduce((s,x)=>s+x.amount,0), totalBonus=bonusFiltered.reduce((s,x)=>s+x.amount,0);
   const lastDP=latestTransaction(dep),lastWD=latestTransaction(wd);
   const [cls,status]=reportStatus(totalDP,totalWD,totalBonus);
   const rawId=$('memberId').value.trim();
@@ -790,7 +804,8 @@ if(agentUser('omenbego')!=='BEB@omenbego'||agentUser('BEB@Atikkk')!=='BEB@Atikkk
 const sampleStatus=reportStatus(9224000,5390000,148500);if(sampleStatus[2]!==3685500)throw new Error('Report status arithmetic failed');
 const membersFull=parseMembers('1 | 9/14/2026 10:45:53 PM | BEB@MarioVip09 | Full | No | Open\n2 | 9/14/2026 10:45:12 PM | BEB@TORINO88 | Full | No | Open');if(membersFull.length!==2||membersFull[0].date!=='9/14/2026 10:45:53 PM'||membersFull[1].date!=='9/14/2026 10:45:12 PM'||membersFull[0].user!=='BEB@MarioVip09')throw new Error('New Member full register datetime parser failed');
 const reportDepAll=parseReportDepositRows('Total Records: 4 Total Amount: 52.50\n| 1 | BEB@Goarmiamang | BCA | X | 2.500 | 14/09/2026 00:06:03 AM | Confirmed |\n| 2 | BEB@Goarmiamang | SCB A BONUS DEPOSIT HARIAN 01 | 15.000 | 13/09/2026 00:00:00 AM | Confirmed |\n| 3 | BEB@Goarmiamang | SCB B BONUS MEMBER BARU | 10.000 | 12/09/2026 00:00:00 AM | Confirmed |\n| 4 | BEB@Goarmiamang | BATAL WD | 25.000 | 11/09/2026 00:00:00 AM | Confirmed |');if(reportDepAll.length!==4||reportDepAll.reduce((a,x)=>a+x.amount,0)!==52500)throw new Error('Report all-deposit total parser failed');
-const reportBonusAll=reportDepAll.filter(x=>/(SCB\s*[A-D]\b|BONUS|FREEBET)/i.test(x.raw||''));if(reportBonusAll.reduce((a,x)=>a+x.amount,0)!==25000)throw new Error('Report bonus total parser failed'); const multi='BEB@TestMulti\nBCA Test 1234567890\n**200.000** | 14/09/2026 10:46:00 PM | Agent Deposit | Confirmed\nBEB@TestMulti\nOVO Test 0812345678\n**500.000** | 14/09/2026 10:47:00 PM | Member Deposit | Confirmed';const md=extractDeposit(multi);if(md.length!==2||md[0].amount!==200000||md[1].amount!==500000)throw new Error('Repeated username HISTORY DEPOSIT parser failed');const mixedQ='BEB@TestMulti\n**300.000** | 17891724390297766 | | 14/09/2026 10:50:00 PM | QR Pay | Confirmed';const mixedM=parseMembers('1 | 9/14/2026 10:45:53 PM | BEB@TestMulti | Full | No | Open');const mq=extractQR(mixedQ);const candidates=[...mq,...md].filter(x=>x.dateKey===mixedM[0].dateKey&&x.time>=mixedM[0].time).sort((a,b)=>a.time-b.time);if(candidates.length!==3||candidates[0].amount!==200000)throw new Error('Combined QRIS + HISTORY DEPOSIT first-deposit source failed');const beforeOnly=extractDeposit('BEB@TestMulti\nBCA Test 123\n**900.000** | 14/09/2026 10:40:00 PM | Member Deposit | Confirmed');if(beforeOnly[0].time>=mixedM[0].time)throw new Error('Register-time guard failed');const wh2='| 1 | BEB@TestMulti | BCA | X | 14/09/2026 01:00 PM | 500.00 | 500.69 | 0.69 | Member Withdraw | Confirmed | 14/09/2026 01:01 PM | |\n| 2 | BEB@TestMulti | BCA | X | 14/09/2026 02:00 PM | 1,278.00 | 1,280.00 | 2.00 | Member Withdraw | Confirmed | 14/09/2026 02:01 PM | |';const wp2=parseTableTransactions(wh2,'withdraw');if(wp2.length!==2||wp2[0].amount!==500000||wp2[1].amount!==1278000)throw new Error('Withdraw 1:1000 scaling regression');
+const reportBonusAll=reportDepAll.filter(x=>/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN/i.test(x.sourceBefore||x.raw||''));if(reportBonusAll.reduce((a,x)=>a+x.amount,0)!==15000)throw new Error('Report bonus exact SCB A total parser failed');
+const reportDepWithOtherBonus=parseReportDepositRows('Total Records: 5\n| 1 | BEB@Test | BCA | X | 2.500 | 14/09/2026 00:06:03 AM | Confirmed |\n| 2 | BEB@Test | SCB A BONUS DEPOSIT HARIAN 01 | 15.000 | 13/09/2026 00:00:00 AM | Confirmed |\n| 3 | BEB@Test | SCB B BONUS MEMBER BARU | 10.000 | 12/09/2026 00:00:00 AM | Confirmed |\n| 4 | BEB@Test | FREEBET | 7.000 | 11/09/2026 00:00:00 AM | Confirmed |\n| 5 | BEB@Test | SCB A BONUS DEPOSIT HARIAN 01 | 5.000 | 10/09/2026 00:00:00 AM | Confirmed |');if(reportDepWithOtherBonus.reduce((a,x)=>a+x.amount,0)!==39500)throw new Error('Report all deposit including other bonus parser failed');const exactBonus=reportDepWithOtherBonus.filter(x=>/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN/i.test(x.sourceBefore||x.raw||'')).reduce((a,x)=>a+x.amount,0);if(exactBonus!==20000)throw new Error('Exact SCB A bonus rule failed');const corrected=reportStatus(16583300,15542000,150300);if(corrected[0]!=='win'||corrected[2]!==891000)throw new Error('Corrected report status arithmetic failed'); const multi='BEB@TestMulti\nBCA Test 1234567890\n**200.000** | 14/09/2026 10:46:00 PM | Agent Deposit | Confirmed\nBEB@TestMulti\nOVO Test 0812345678\n**500.000** | 14/09/2026 10:47:00 PM | Member Deposit | Confirmed';const md=extractDeposit(multi);if(md.length!==2||md[0].amount!==200000||md[1].amount!==500000)throw new Error('Repeated username HISTORY DEPOSIT parser failed');const mixedQ='BEB@TestMulti\n**300.000** | 17891724390297766 | | 14/09/2026 10:50:00 PM | QR Pay | Confirmed';const mixedM=parseMembers('1 | 9/14/2026 10:45:53 PM | BEB@TestMulti | Full | No | Open');const mq=extractQR(mixedQ);const candidates=[...mq,...md].filter(x=>x.dateKey===mixedM[0].dateKey&&x.time>=mixedM[0].time).sort((a,b)=>a.time-b.time);if(candidates.length!==3||candidates[0].amount!==200000)throw new Error('Combined QRIS + HISTORY DEPOSIT first-deposit source failed');const beforeOnly=extractDeposit('BEB@TestMulti\nBCA Test 123\n**900.000** | 14/09/2026 10:40:00 PM | Member Deposit | Confirmed');if(beforeOnly[0].time>=mixedM[0].time)throw new Error('Register-time guard failed');const wh2='| 1 | BEB@TestMulti | BCA | X | 14/09/2026 01:00 PM | 500.00 | 500.69 | 0.69 | Member Withdraw | Confirmed | 14/09/2026 01:01 PM | |\n| 2 | BEB@TestMulti | BCA | X | 14/09/2026 02:00 PM | 1,278.00 | 1,280.00 | 2.00 | Member Withdraw | Confirmed | 14/09/2026 02:01 PM | |';const wp2=parseTableTransactions(wh2,'withdraw');if(wp2.length!==2||wp2[0].amount!==500000||wp2[1].amount!==1278000)throw new Error('Withdraw 1:1000 scaling regression');
 return 'PASS'};
 try{window.__selfTest();console.info('MARIOBOLA Support Tools self-test: PASS')}catch(e){console.error('Self-test failed',e)}
 </script></body></html>
