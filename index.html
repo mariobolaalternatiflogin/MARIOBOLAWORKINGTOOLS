@@ -3,74 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" type="image/png" href="assets/favicon-m.png">
-<link rel="apple-touch-icon" href="assets/favicon-m.png">
 <title>MARIOBOLA TOOLS</title>
 <style>
-:root{--bg:#050a13;--panel:#0b1424ee;--panel2:#111e33;--line:#253a5c;--line2:#314b72;--text:#f4f7ff;--muted:#9eafd0;--accent:#ffd447;--accent2:#ff9f1a;--green:#35d49a;--red:#ff6474;--orange:#ffb83d;--blue:#62b0ff}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#050a13;color:var(--text);min-height:100vh;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 12% 8%,#243b67 0,transparent 30%),radial-gradient(circle at 88% 0%,#533b08 0,transparent 24%),linear-gradient(135deg,#050a13 0%,#081224 50%,#050a13 100%)}
-body:after{content:"";position:fixed;inset:0;z-index:-1;opacity:.18;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,#000,transparent 75%)}
-header{min-height:78px;padding:15px clamp(16px,4vw,42px);border-bottom:1px solid #ffffff12;background:linear-gradient(90deg,#07101deb,#0a1427e8,#12100bea);backdrop-filter:blur(18px);position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:13px;box-shadow:0 10px 40px #0007}
-.brand-logo{width:150px;height:48px;object-fit:contain;display:block;filter:drop-shadow(0 0 12px #0008)}
-.brand-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#ffe26a,#ffb000);color:#15100a;font-size:25px;font-weight:1000;box-shadow:0 0 28px #ffca3a55}
-.brand-copy{min-width:0}.brand-copy h1{margin:0;font-size:22px;letter-spacing:.7px}.sub{color:var(--muted);font-size:12px;margin-top:3px}
-.header-chip{margin-left:auto;border:1px solid #ffffff16;background:#ffffff08;color:#b9c8e5;padding:7px 10px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.7px}
-nav{display:flex;gap:8px;padding:10px clamp(16px,4vw,42px);background:#070f1bea;border-bottom:1px solid #ffffff0e;position:sticky;top:78px;z-index:29;overflow:auto;backdrop-filter:blur(16px)}
-nav button{border:1px solid #ffffff12;background:#0c1729;color:#bdcbe3;padding:10px 15px;border-radius:10px;cursor:pointer;white-space:nowrap;font-weight:750;transition:.18s}
-nav button:hover{border-color:#ffffff2b;transform:translateY(-1px)}nav button.active{background:linear-gradient(135deg,#ffe16b,#ffb52b);border-color:#ffd34e;color:#171107;box-shadow:0 8px 24px #ffbd3040}
-main{max-width:1640px;margin:auto;padding:24px clamp(14px,3vw,34px) 45px}.page{display:none}.page.active{display:block;animation:fadeIn .25s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.card{background:linear-gradient(145deg,#0c1729ee,#081222e8);border:1px solid #ffffff10;border-radius:18px;padding:20px;margin-bottom:17px;box-shadow:0 20px 65px #0006, inset 0 1px #ffffff07}
-h2{margin:0 0 6px;font-size:20px}h3{margin:0 0 10px}.hint{color:var(--muted);font-size:13px;line-height:1.6}
-textarea{width:100%;min-height:250px;background:#050b15d9;color:#eaf1ff;border:1px solid #ffffff12;border-radius:12px;padding:13px;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical;outline:none;transition:.18s}
-textarea:focus,input:focus,select:focus{border-color:#ffd34e66;box-shadow:0 0 0 3px #ffd34e0e}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}input,select{background:#07101ed9;color:var(--text);border:1px solid #ffffff12;border-radius:9px;padding:9px 11px;outline:none}
-button.primary,.btn{background:linear-gradient(135deg,#ffe16b,#ffad20);color:#171107;border:0;border-radius:9px;padding:10px 15px;font-weight:900;cursor:pointer;box-shadow:0 7px 22px #ffb52b22}.btn2{background:#111e33;color:var(--text);border:1px solid #ffffff14;border-radius:9px;padding:10px 15px;cursor:pointer}.btn2:hover,.export:hover{border-color:#ffffff30}
-.stats{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin:15px 0}.stat{padding:13px;border:1px solid #ffffff10;border-radius:12px;background:linear-gradient(145deg,#0d1a2e,#091222)}.stat b{display:block;font-size:19px}.stat span{font-size:11px;color:var(--muted)}
-.table-wrap{overflow:auto;max-height:68vh;border:1px solid #ffffff12;border-radius:12px;background:#07101bd9}
-table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{padding:11px 10px;border-bottom:1px solid #ffffff0d;text-align:left;vertical-align:top}th{background:#14243d;position:sticky;top:0;z-index:2;color:#dce7fa;font-size:11px;letter-spacing:.35px;text-transform:uppercase}
-.ok{background:#0d2d25}.danger{background:#35151c}.warn{background:#3b2b0e}.pending{background:#102a43}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}.b-ok{background:#1e9d63}.b-danger{background:#d64555}.b-warn{background:#d89522;color:#171007}.b-pending{background:#3184c6}
-.muted{color:var(--muted)}.note{padding:12px 14px;border-left:4px solid var(--accent);background:#0a1628cc;border-radius:9px;color:#c9d6ee;font-size:13px}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.toolbar input{min-width:220px}.filter-btn.active{outline:2px solid #ffd34e}.export{background:#182943;color:#fff;border:1px solid #ffffff14;border-radius:9px;padding:10px 15px;cursor:pointer}.small{font-size:11px}.nowrap{white-space:nowrap}.empty{padding:28px;text-align:center;color:var(--muted)}.totals{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.pill{border:1px solid #ffffff12;background:#0a1425;border-radius:999px;padding:7px 10px;font-size:12px}.source-count{font-size:12px;color:var(--muted);margin-top:8px}
-.section-label{display:flex;align-items:center;gap:8px;margin-bottom:10px}.section-label:before{content:"";width:4px;height:18px;border-radius:5px;background:linear-gradient(#ffe16b,#ff9f1a)}
-.audit-strong{font-weight:950;color:#ffe16b;text-shadow:0 0 14px #ffd34e22}.audit-user{font-weight:950;color:#75c5ff}.audit-id{font-weight:950;color:#ffe16b}.audit-amount{font-weight:950;color:#fff;font-size:13px}.zero{color:#9eafd0;font-weight:800}
-
-.daily-grid{display:grid;grid-template-columns:1fr;gap:14px}
-.report-member{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.report-member label{display:block;font-size:11px;color:var(--muted);font-weight:800;margin-bottom:5px}
-.report-member input{width:100%}
-.game-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.game-grid label{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #ffffff12;background:#091526;border-radius:9px;font-size:12px;cursor:pointer}
-.game-grid input{accent-color:#ffd34e}
-.sort-select{min-width:210px}
-.report-output{background:#050b15d9;border:1px solid #ffffff12;border-radius:12px;padding:16px;font:13px/1.75 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}
-.report-output .win{color:#35d49a;font-weight:900}.report-output .lose{color:#ff6474;font-weight:900}.report-output .draw{color:#ffb83d;font-weight:900}
-.report-kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}
-.report-kpi .stat b{font-size:16px}
-.copy-area{width:100%;min-height:150px;background:#050b15d9;color:#eaf1ff;border:1px solid #ffffff12;border-radius:12px;padding:13px;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
-@media(max-width:900px){.report-member{grid-template-columns:1fr}.report-kpi{grid-template-columns:repeat(2,1fr)}.brand-logo{width:130px}}
-
-@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:14px 12px 35px}nav{top:78px}.header-chip{display:none}.brand-copy h1{font-size:19px}}
-@media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.stats .stat{min-width:0}.toolbar input{min-width:160px;width:100%}}
-</style>
+:root{--bg:#07101f;--panel:#0e182c;--panel2:#14233d;--line:#273a5d;--text:#eef4ff;--muted:#9eb0d0;--accent:#6ea8fe}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top right,#172b51 0,#07101f 45%,#050b15 100%);color:var(--text)}
+header{padding:18px 24px;border-bottom:1px solid var(--line);background:#091426ee;backdrop-filter:blur(12px);position:sticky;top:0;z-index:20}
+h1{margin:0;font-size:23px}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+nav{display:flex;gap:8px;padding:11px 24px;background:#0a1528f5;border-bottom:1px solid var(--line);position:sticky;top:70px;z-index:19;overflow:auto}
+nav button{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 15px;border-radius:9px;cursor:pointer;white-space:nowrap}nav button.active{background:var(--accent);color:#06101f;font-weight:800}
+main{max-width:1600px;margin:auto;padding:20px}.page{display:none}.page.active{display:block}.card{background:#0e182cf2;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 18px 50px #0005}
+h2{margin:0 0 6px;font-size:20px}h3{margin:0 0 10px}.hint{color:var(--muted);font-size:13px;line-height:1.55}
+textarea{width:100%;min-height:250px;background:#050c17;color:#eaf1ff;border:1px solid var(--line);border-radius:10px;padding:12px;font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}input,select{background:#07101e;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px}
+button.primary,.btn{background:var(--accent);color:#06101f;border:0;border-radius:8px;padding:10px 15px;font-weight:800;cursor:pointer}.btn2{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 15px;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin:14px 0}.stat{padding:12px;border:1px solid var(--line);border-radius:10px;background:#0a1425}.stat b{display:block;font-size:19px}.stat span{font-size:11px;color:var(--muted)}
+.table-wrap{overflow:auto;max-height:68vh;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#172640;position:sticky;top:0;z-index:2}.ok{background:#123b29}.danger{background:#4b1720}.warn{background:#503a10}.pending{background:#12365a}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}.b-ok{background:#1e9d63}.b-danger{background:#d64555}.b-warn{background:#d89522;color:#171007}.b-pending{background:#3184c6}.muted{color:var(--muted)}.note{padding:11px 13px;border-left:4px solid var(--accent);background:#0a1628;border-radius:7px;color:#c9d6ee;font-size:13px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:12px}nav{top:68px}}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.toolbar input{min-width:220px}.filter-btn.active{outline:2px solid #fff}.export{background:#263957;color:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 15px;cursor:pointer}.small{font-size:11px}.nowrap{white-space:nowrap}.empty{padding:22px;text-align:center;color:var(--muted)}.totals{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.pill{border:1px solid var(--line);background:#0a1425;border-radius:999px;padding:7px 10px;font-size:12px}.source-count{font-size:12px;color:var(--muted);margin-top:8px}</style>
 </head>
 <body>
-<header>
-  <img class="brand-logo" src="assets/logo-mariobola.png" alt="MARIOBOLA">
-  <div class="brand-copy"><h1>MARIOBOLA TOOLS</h1><div class="sub">New Member • BONUS Audit • First Deposit • Bonus Harian • Laporan Withdraw</div></div>
-  <div class="header-chip">LOCAL • PRIVATE</div>
-</header>
+<header><h1>MARIOBOLA TOOLS</h1><div class="sub">New Member • BONUS Audit • New Member First Deposit • Local processing</div></header>
 <nav>
 <button class="active" data-page="register">1. New Member</button>
 <button data-page="bonus">2. BONUS</button>
 <button data-page="first">3. New Member First Deposit</button>
-<button data-page="daily">4. Input Bonus Harian</button>
-<button data-page="report">5. Laporan Withdraw</button>
 </nav>
 <main>
 <section id="register" class="page active">
@@ -79,91 +37,18 @@ table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{p
 </section>
 <section id="bonus" class="page">
 <div class="card"><h2>BONUS — Audit Deposit</h2><p class="hint"><b>Urutan:</b> hasil mengikuti waktu transaksi HISTORY QRIS PAY dari paling awal ke paling akhir, bukan alfabet. <b>Pembulatan bonus:</b> hanya nilai SCB A BONUS DEPOSIT HARIAN dibulatkan ke bawah; di bawah Rp10.000 ke kelipatan Rp500, dan mulai Rp10.000 ke kelipatan Rp1.000. <b>Aturan final:</b> bonus = <b>5% dari satu deposit terbesar per member</b>, maksimum <b>Rp100.000</b>. Deposit tidak dijumlahkan. Semua transaksi bonus yang ditemukan dihitung untuk mendeteksi double bonus. Jika sudah pernah diberikan dari deposit lebih kecil, hasil tetap <b>KEKURANGAN/KELEBIHAN</b>, bukan BELUM DIBERIKAN.</p>
-<div class="grid2"><div><div class="section-label"><h3>HISTORY QRIS PAY</h3></div><textarea id="qrisText" placeholder="Paste hasil copy Chrome dari Deposit Request History (QRPay)..."></textarea></div><div><div class="section-label"><h3>HISTORY DEPOSIT</h3></div><textarea id="depositText" placeholder="Paste hasil copy Chrome dari Deposit Request History..."></textarea></div></div>
+<div class="grid2"><div><h3>HISTORY QRIS PAY</h3><textarea id="qrisText" placeholder="Paste hasil copy Chrome dari Deposit Request History (QRPay)..."></textarea></div><div><h3>HISTORY DEPOSIT</h3><textarea id="depositText" placeholder="Paste hasil copy Chrome dari Deposit Request History..."></textarea></div></div>
 <div class="row" style="margin-top:12px"><button class="primary" id="runBonusBtn">Analisis BONUS</button><button class="btn2" id="clearBonusBtn">Bersihkan</button></div>
 <div id="bonusStats"></div><div class="toolbar" id="bonusTools" style="display:none"><input id="bonusSearch" placeholder="Cari username..." autocomplete="off"><button class="btn2 filter-btn active" data-filter="ALL">Semua</button><button class="btn2 filter-btn" data-filter="OK">🟢 Cocok</button><button class="btn2 filter-btn" data-filter="DANGER">🔴 Double</button><button class="btn2 filter-btn" data-filter="WARN">🟠 Selisih</button><button class="btn2 filter-btn" data-filter="PENDING">🔵 Belum</button><button class="export" id="copyBonusBtn">Copy Hasil</button><button class="export" id="csvBonusBtn">Export CSV</button><button class="export" id="xlsBonusBtn">Export Excel</button></div>
 <div id="bonusResult"></div></div>
 </section>
 <section id="first" class="page">
 <div class="card"><h2>New Member First Deposit</h2><p class="hint">Gunakan 3 sumber. Sistem mencocokkan username + tanggal register, lalu mengambil <b>deposit QRPay pertama secara waktu pada hari register</b>. FREEBET diambil dari HISTORY DEPOSIT pada hari register.</p>
-<div class="grid2"><div><div class="section-label"><h3>HISTORY QRIS PAY</h3></div><textarea id="fqris" placeholder="Paste QRPay..."></textarea></div><div><div class="section-label"><h3>HISTORY DEPOSIT</h3></div><textarea id="fdeposit" placeholder="Paste Deposit History..."></textarea></div></div>
-<div style="margin-top:14px"><div class="section-label"><h3>NEW MEMBER HARIAN</h3></div><textarea id="members" placeholder="Paste tabel New Member Harian seperti contoh..."></textarea></div>
+<div class="grid2"><div><h3>HISTORY QRIS PAY</h3><textarea id="fqris" placeholder="Paste QRPay..."></textarea></div><div><h3>HISTORY DEPOSIT</h3><textarea id="fdeposit" placeholder="Paste Deposit History..."></textarea></div></div>
+<div style="margin-top:14px"><h3>NEW MEMBER HARIAN</h3><textarea id="members" placeholder="Paste tabel New Member Harian seperti contoh..."></textarea></div>
 <div class="row" style="margin-top:12px"><button class="primary" id="runFirstBtn">Analisis First Deposit</button><button class="btn2" id="clearFirstBtn">Bersihkan</button></div>
 <div id="firstStats"></div><div class="toolbar" id="firstTools" style="display:none"><input id="firstSearch" placeholder="Cari username..." autocomplete="off"><button class="btn2" id="copyFirstBtn">Copy Hasil</button><button class="export" id="csvFirstBtn">Export CSV</button><button class="export" id="xlsFirstBtn">Export Excel</button></div><div id="firstResult"></div></div>
 </section>
-
-<section id="daily" class="page">
-<div class="card">
-  <h2>Input Bonus Harian</h2>
-  <p class="hint">Tempel langsung hasil <b>copy dari Chrome → Deposit History</b>. Sistem mengambil transaksi <b>SCB A BONUS DEPOSIT HARIAN 01</b> pada tanggal hari ini, menghitung username yang menerima bonus lebih dari sekali, lalu menyediakan sortir berdasarkan username atau nominal.</p>
-  <div class="note" id="dailyDateNote"></div>
-  <div class="daily-grid" style="margin-top:14px">
-    <div>
-      <div class="section-label"><h3>SUMBER DEPOSIT HISTORY</h3></div>
-      <textarea id="dailySource" placeholder="Paste hasil copy Chrome dari Deposit History di sini..."></textarea>
-    </div>
-  </div>
-  <div class="row" style="margin-top:12px">
-    <button class="primary" id="runDailyBtn">Analisis Bonus Harian</button>
-    <button class="btn2" id="clearDailyBtn">Bersihkan</button>
-  </div>
-  <div id="dailyStats"></div>
-  <div class="toolbar" id="dailyTools" style="display:none">
-    <input id="dailySearch" placeholder="Cari username..." autocomplete="off">
-    <select id="dailySort" class="sort-select">
-      <option value="user-asc">Username A → Z</option>
-      <option value="user-desc">Username Z → A</option>
-      <option value="amount-asc">Nominal kecil → besar</option>
-      <option value="amount-desc">Nominal besar → kecil</option>
-    </select>
-    <button class="export" id="copyDailyBtn">Copy Hasil</button>
-    <button class="export" id="csvDailyBtn">Export CSV</button>
-  </div>
-  <div id="dailyResult"></div>
-</div>
-</section>
-
-<section id="report" class="page">
-<div class="card">
-  <h2>Laporan Withdraw</h2>
-  <p class="hint">Masukkan DETAIL MEMBER, lalu tempel <b>Data Deposit (3 Bulan Terakhir)</b> dan <b>Data Withdraw (3 Bulan Terakhir)</b> dari Chrome. Rentang 3 bulan dihitung otomatis dari tanggal perangkat setiap kali halaman dibuka.</p>
-  <div class="note" id="reportDateNote"></div>
-
-  <div class="section-label" style="margin-top:16px"><h3>DETAIL MEMBER</h3></div>
-  <div class="report-member">
-    <div><label>Nama Web</label><input id="memberWeb" value="MARIOBOLA" placeholder="Nama Web"></div>
-    <div><label>ID Member</label><input id="memberId" placeholder="Contoh: omenbego"></div>
-    <div><label>Waktu Register</label><input id="memberRegister" placeholder="Contoh: 14/09/2026 10:20:27 PM"></div>
-  </div>
-  <div class="report-member" style="margin-top:10px">
-    <div><label>Sisa Saldo (opsional, jika tersedia di sumber)</label><input id="memberBalance" placeholder="Contoh: 690"></div>
-  </div>
-
-  <div class="grid2" style="margin-top:16px">
-    <div>
-      <div class="section-label"><h3>DATA DEPOSIT (3 BULAN TERAKHIR)</h3></div>
-      <textarea id="reportDeposit" placeholder="Paste seluruh hasil copy Chrome untuk Data Deposit (3 Bulan Terakhir)..."></textarea>
-    </div>
-    <div>
-      <div class="section-label"><h3>DATA WITHDRAW (3 BULAN TERAKHIR)</h3></div>
-      <textarea id="reportWithdraw" placeholder="Paste seluruh hasil copy Chrome untuk Data Withdraw (3 Bulan Terakhir)..."></textarea>
-    </div>
-  </div>
-
-  <div class="section-label" style="margin-top:16px"><h3>JENIS GAME</h3></div>
-  <div class="game-grid" id="gameGrid"></div>
-
-  <div class="row" style="margin-top:14px">
-    <button class="primary" id="runReportBtn">Buat HASIL LAPORAN</button>
-    <button class="btn2" id="clearReportBtn">Bersihkan</button>
-    <button class="export" id="copyReportBtn" style="display:none">Copy HASIL LAPORAN</button>
-  </div>
-  <div id="reportStats"></div>
-  <div class="section-label" style="margin-top:16px"><h3>HASIL LAPORAN</h3></div>
-  <div id="reportResult"></div>
-</div>
-</section>
-
 </main>
 <script>
 const $=id=>document.getElementById(id);let bonusRows=[],bonusFilter='ALL',firstRows=[];
@@ -180,9 +65,8 @@ function parseInternationalAmount(t){let s=String(t??'').trim().replace(/[^0-9.,
   else if(dots){ const parts=s.split('.'); if(parts.length>2 || (parts.length===2 && parts[1].length===3)) s=s.replace(/\./g,''); }
   const n=Number(s);return Number.isFinite(n)?n:0}
 function norm(s){return String(s||'').toLowerCase().replace(/^beb@/,'').replace(/\s+/g,'').replace(/[^a-z0-9@_.-]/g,'')}
-function agentUser(s){const v=String(s||'').trim();return /^beb@/i.test(v)?'BEB@'+v.slice(4):('BEB@'+v)}
 function dateOnly(s){const m=String(s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:null}
-function timeValue(s){const m=String(s||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);if(!m)return 0;let h=+m[4],sec=+(m[6]||0);const ap=(m[7]||'').toUpperCase();if(ap){h=h%12+(ap==='PM'?12:0)}return new Date(+m[3],+m[2]-1,+m[1],h,+m[5],sec).getTime()}
+function timeValue(s){const m=String(s||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)/i);if(!m)return 0;let h=+m[4]%12;if(m[7].toUpperCase()==='PM')h+=12;return new Date(+m[3],+m[2]-1,+m[1],h,+m[5],+m[6]).getTime()}
 function floorBonusAmount(n){const v=Math.max(0,Number(n)||0);const k=Math.floor(v/1000)*1000;const r=v-k;return k+(r>=500?500:0)}
 const MONEY_TOKEN='(?:\\d{1,3}(?:[.,]\\d{3})+(?:[.,]\\d+)?|\\d+(?:[.,]\\d+)?)';
 function parseMoneyToken(t){return parseInternationalAmount(t)}
@@ -199,498 +83,112 @@ function amountFromFragment(fragment){
   // Fallback: find a money token followed later by a 17+ digit reference and then a date.
   const fallback=new RegExp('('+MONEY_TOKEN+')(?=\\D{0,80}\\d{17,22}\\D{0,80}\\d{1,2}\\/\\d{1,2}\\/\\d{4})','g');
   const fb=[...s.matchAll(fallback)];
-  return fb.length?parseMoneyToken(fb[fb.length-1][1]):0;
+  if(fb.length)return parseMoneyToken(fb[fb.length-1][1]);
+  const direct=new RegExp('((?:\\d{1,3}(?:[.,]\\d{3})+(?:[.,]\\d+)?|\\d{2,}(?:[.,]\\d+)?))\\s*(?=\\|?\\s*\\d{1,2}\\/\\d{1,2}\\/\\d{4}\\s+\\d{1,2}:\\d{2}:\\d{2})','g');
+  const dh=[...s.matchAll(direct)];
+  return dh.length?parseMoneyToken(dh[dh.length-1][1]):0;
 }
 function splitUserRecords(raw){const s=String(raw||'').replace(/\r/g,'');const ms=[...s.matchAll(/BEB@([A-Za-z0-9_.-]+)/gi)];return ms.map((m,i)=>({user:m[1],start:m.index,end:ms[i+1]?.index??s.length,chunk:s.slice(m.index,ms[i+1]?.index??s.length)}))}
-function extractQR(raw){return splitUserRecords(raw).map(r=>{const dates=[...r.chunk.matchAll(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?/gi)].map(x=>x[0]);const d=dates[0]||null;return{user:r.user,date:d,dateKey:dateOnly(d),time:timeValue(d),amount:amountFromFragment(r.chunk),raw:r.chunk}}).filter(x=>x.user&&x.amount>0)}
+function splitTransactions(raw){
+  const out=[];
+  for(const r of splitUserRecords(raw)){
+    const c=r.chunk;
+    const dm=[...c.matchAll(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)/gi)];
+    if(!dm.length){out.push({...r,txChunk:c});continue}
+    for(let i=0;i<dm.length;i++){
+      const start=i===0?0:dm[i].index;
+      const end=i+1<dm.length?dm[i+1].index:c.length;
+      out.push({...r,txChunk:c.slice(start,end)});
+    }
+  }
+  return out;
+}
+function extractQR(raw){return splitUserRecords(raw).map(r=>{const dates=[...r.chunk.matchAll(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)/gi)].map(x=>x[0]);const d=dates[0]||null;return{user:r.user,date:d,dateKey:dateOnly(d),time:timeValue(d),amount:amountFromFragment(r.chunk),raw:r.chunk}}).filter(x=>x.user&&x.amount>0)}
 function depositHistoryCategory(c){
   const s=String(c||'');
-  // These phrases are NEVER treated as a real deposit for audit/First Deposit.
-  if(/BATAL\s+WD/i.test(s))return 'BATAL_WD';
-  if(/WD\s+DIKEMBALIKAN\s+KE\s+AKUN\s+MEMBER|BATAL\s+WD\s+TIDAK\s+CAPAI\s+TO|TIDAK\s+CAPAI\s+TO/i.test(s))return 'NON_DEPOSIT';
-  if(/SCB\s*A\s*BONUS\s+DEPOSIT\s+HARIAN/i.test(s))return 'BONUS_DEPOSIT';
-  if(/SCB\s*B\s*BONUS\s+MEMBER\s+BARU\s+SPECIAL\s+BONUS/i.test(s))return 'NON_DEPOSIT';
-  if(/SCB\s*C\s*BONUS\s+REFERRAL\s+TWO\s+POINT\s+FIVE\s+PERCENT/i.test(s))return 'NON_DEPOSIT';
-  if(/SCB\s*D\s*BONUS\s+CASHBACK\s+SLOT\s+GAMES/i.test(s))return 'NON_DEPOSIT';
+  if(/BATAL\s+WD/i.test(s))return 'NON_DEPOSIT';
+  if(/WD\s+DIKEMBALIKAN/i.test(s))return 'NON_DEPOSIT';
   if(/FREEBET/i.test(s))return 'NON_DEPOSIT';
+  if(/SCB\s*[A-D]\s*BONUS/i.test(s))return 'NON_DEPOSIT';
+  if(/BONUS\s+DEPO/i.test(s))return 'NON_DEPOSIT';
+  if(/CASHBACK/i.test(s))return 'NON_DEPOSIT';
   return 'DEPOSIT';
 }
-function isBonusChunk(c){return depositHistoryCategory(c)==='BONUS_DEPOSIT'}
+function isQualifyingDeposit(c){return depositHistoryCategory(c)==='DEPOSIT'}
+
+function isBonusChunk(c){return !isQualifyingDeposit(c)}
+function isBonusTransaction(c){return /SCB\s*A\s*BONUS\s+DEPOSIT|FREEBET/i.test(String(c||''))}
 function extractDeposit(raw){
-  return splitUserRecords(raw).map(r=>{
-    const dates=[...r.chunk.matchAll(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?/gi)].map(x=>x[0]);
-    const d=dates[0]||null, category=depositHistoryCategory(r.chunk);
-    let amount=0;
-    const bm=r.chunk.match(new RegExp('SCB\\s*A\\s*(?:BONUS\\s+DEPOSIT(?:\\s+HARIAN)?|BONUS\\s+DEPO(?:\\s+TGL)?|FREEBET)[^\\d]{0,50}(?:01\\s*)?('+MONEY_TOKEN+')','i'));
-    if(category==='BONUS_DEPOSIT'){
-      // The SCB A row may be compact (e.g. "01" directly followed by
-      // "10.000") or separated by Markdown/newlines. Use the explicit SCB
-      // match first, then fall back to the token closest to the date.
-      if(bm && parseMoneyToken(bm[1])>1) amount=floorBonusAmount(parseMoneyToken(bm[1]));
-      else {
-        const cleaned=r.chunk.replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-        const dm=dates[0]||'';
-        const pos=dm?cleaned.indexOf(dm):-1;
-        const before=pos>=0?cleaned.slice(0,pos):cleaned;
-        const marker=before.search(/SCB\s+A\s+(?:BONUS\s+DEPOSIT(?:\s+HARIAN)?|BONUS\s+DEPO(?:\s+TGL)?|FREEBET)/i);
-        const tail=marker>=0?before.slice(marker):before;
-        const mh=[...tail.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-        const usable=mh.map(x=>x[1]).filter(x=>parseMoneyToken(x)>1);
-        amount=floorBonusAmount(parseMoneyToken(usable.length?usable[usable.length-1]:0));
-      }
-    } else if(category==='BATAL_WD'){
-      const cleaned=r.chunk.replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-      const dm=dates[0]||'';
-      const pos=dm?cleaned.indexOf(dm):-1;
-      const before=pos>=0?cleaned.slice(0,pos):cleaned;
-      const mh=[...before.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      if(mh.length) amount=parseMoneyToken(mh[mh.length-1][1]);
-    } else if(category==='DEPOSIT'){
-      // HISTORY DEPOSIT rows can contain bank/account numbers. Prefer the
-      // monetary token closest to the transaction date so an account suffix
-      // is never mistaken for the deposit amount.
-      const cleaned=r.chunk.replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-      const dm=dates[0]||'';
-      const pos=dm?cleaned.indexOf(dm):-1;
-      const before=pos>=0?cleaned.slice(0,pos):cleaned;
-      const mh=[...before.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      if(mh.length) amount=parseMoneyToken(mh[mh.length-1][1]);
-      if(!amount) amount=amountFromFragment(r.chunk);
+  return splitTransactions(raw).map(r=>{
+    const d=(r.txChunk.match(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)/i)||[])[0]||null;
+    const category=depositHistoryCategory(r.txChunk);
+    let amount=category==='DEPOSIT'?amountFromFragment(r.txChunk):0;
+    if(!amount){
+      const compactBonus=r.txChunk.match(/SCB\s*A\s*BONUS\s+DEPOSIT(?:\s+HARIAN)?\s*01(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?)/i);
+      if(compactBonus)amount=parseMoneyToken(compactBonus[1]);
     }
-    const remark=(r.chunk.match(/(?:BONUS|FREEBET|BATAL\s+WD|WD\s+DIKEMBALIKAN|TIDAK\s+CAPAI\s+TO)[^\d]{0,100}/i)||[])[0]?.trim()||'';
-    return {user:r.user,date:d,dateKey:dateOnly(d),time:timeValue(d),amount,bonus:category==='BONUS_DEPOSIT',category,remark,paymentMethod:/Member\s+Deposit/i.test(r.chunk)?'Member Deposit':(/Agent\s+Deposit/i.test(r.chunk)?'Agent Deposit':''),raw:r.chunk}
+    if(!amount){
+      const nums=[...r.txChunk.matchAll(/\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?/g)];
+      if(nums.length)amount=parseMoneyToken(nums[nums.length-1][0]);
+    }
+    if(/SCB\s*A\s*BONUS\s+DEPOSIT/i.test(r.txChunk))amount=floorBonusAmount(amount);
+    const remark=(r.txChunk.match(/(?:SCB\s*[A-D]\s*BONUS|BONUS|FREEBET|BATAL\s+WD|WD\s+DIKEMBALIKAN)[^\d]{0,120}/i)||[])[0]?.trim()||'';
+    return {user:r.user,date:d,dateKey:dateOnly(d),time:timeValue(d),amount,bonus:isBonusTransaction(r.txChunk),category,remark,paymentMethod:/Member\s+Deposit/i.test(r.txChunk)?'Member Deposit':(/Agent\s+Deposit/i.test(r.txChunk)?'Agent Deposit':''),raw:r.txChunk};
   }).filter(x=>x.user&&x.amount>0);
 }
-function dateOnlyUS(s){const m=String(s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);return m?`${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`:null}
-function timeValueUS(s){const m=String(s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);if(!m)return 0;let h=+m[4],sec=+(m[6]||0);const ap=(m[7]||'').toUpperCase();if(ap)h=h%12+(ap==='PM'?12:0);return new Date(+m[3],+m[1]-1,+m[2],h,+m[5],sec).getTime()}
+function memberDateOnly(s){const m=String(s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);return m?`${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`:null}
 function parseMembers(raw){
-  const s=String(raw||'').replace(/\r/g,'');
   const out=[];
-  const lines=s.split(/\n+/);
-  // New Members Chrome copy is a table: Register Date and User Name are on
-  // the same row. Preserve the COMPLETE Register Date including seconds and
-  // AM/PM; never reduce it to date-only.
-  const fullDateRx=/(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM))/i;
-  const shortDateRx=/(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)/i;
-  for(const line of lines){
-    const um=line.match(/BEB@([A-Za-z0-9_.-]+)/i);
-    const tm=line.match(fullDateRx)||line.match(shortDateRx);
-    if(!um||!tm)continue;
-    const date=tm[1].trim();
-    out.push({dateKey:dateOnlyUS(date),date,user:agentUser(um[0]),time:timeValueUS(date)});
-  }
-  // Fallback for copied text where a row is wrapped across multiple lines.
-  if(!out.length){
-    const re=/BEB@([A-Za-z0-9_.-]+)/gi;
-    for(const m of s.matchAll(re)){
-      const chunk=s.slice(Math.max(0,m.index-220),Math.min(s.length,m.index+420));
-      const tm=chunk.match(fullDateRx)||chunk.match(shortDateRx);
-      if(tm){const date=tm[1].trim();out.push({dateKey:dateOnlyUS(date),date,user:agentUser(m[0]),time:timeValue(date)});}
-    }
-  }
-  const seen=new Set();
-  return out.filter(x=>{const k=x.date+'|'+norm(x.user);if(seen.has(k))return false;seen.add(k);return true});
+  const rows=String(raw||'').replace(/\r/g,'').split(/\n+/);
+  const tsRx=/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)/i;
+  for(const line of rows){const tm=line.match(tsRx);const um=line.match(/BEB@([A-Za-z0-9_.-]+)/i);if(tm&&um){const full=tm[0];out.push({dateKey:memberDateOnly(full),date:full,user:um[1],time:timeValue(full)})}}
+  if(!out.length){const re=/(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM))[\s\S]{0,220}?BEB@([A-Za-z0-9_.-]+)/gi;for(const m of String(raw||'').matchAll(re))out.push({dateKey:memberDateOnly(m[1]),date:m[1],user:m[2],time:timeValue(m[1])})}
+  const seen=new Set();return out.filter(x=>{const k=x.dateKey+'|'+norm(x.user);if(seen.has(k))return false;seen.add(k);return true})
 }
 function groupMax(records){const map=new Map();for(const r of records){const k=norm(r.user);if(!map.has(k))map.set(k,[]);map.get(k).push(r)}return map}
 function statusFor(given,expected,count){if(count>1){if(Math.abs(given-expected)<.5)return ['danger','DOUBLE BONUS — TOTAL COCOK'];if(given<expected)return ['danger','DOUBLE BONUS + KEKURANGAN '+money(expected-given)];return ['danger','DOUBLE BONUS + KELEBIHAN '+money(given-expected)]}if(count===0)return ['pending','BELUM DIBERIKAN'];if(Math.abs(given-expected)<.5)return ['ok','SUDAH DIBERIKAN — COCOK'];return ['warn',(given<expected?'KEKURANGAN ':'KELEBIHAN ')+money(Math.abs(given-expected))]}
-function runBonus(){
-  const q=extractQR($('qrisText').value), dep=extractDeposit($('depositText').value);
-  const qMap=groupMax(q), bMap=groupMax(dep.filter(x=>x.bonus));
-  bonusRows=[];
-  // Output order follows the first occurrence in HISTORY QRIS PAY.
-  const order=new Map();
-  q.forEach((r,i)=>{const k=norm(r.user);if(!order.has(k))order.set(k,i)});
-  for(const [k,arr] of qMap){
-    const largest=[...arr].sort((a,b)=>b.amount-a.amount||b.time-a.time)[0];
-    const expected=Math.min(largest.amount*.05,100000);
-    const bonuses=(bMap.get(k)||[]).sort((a,b)=>a.time-b.time);
-    const given=bonuses.reduce((s,x)=>s+x.amount,0);
-    const [cls,label]=statusFor(given,expected,bonuses.length);
-    bonusRows.push({user:largest.user,largest,expected,given,bonuses,all:arr,cls,label,order:order.get(k)??999999});
-  }
-  bonusRows.sort((a,b)=>a.order-b.order);
-  renderBonus();$('bonusTools').style.display=bonusRows.length?'flex':'none';
-}
-function renderBonus(){
-  const search=norm($('bonusSearch')?.value||'');
-  const rows=bonusRows.filter(r=>(bonusFilter==='ALL'||({'ok':'OK','danger':'DANGER','warn':'WARN','pending':'PENDING'}[r.cls]===bonusFilter))&&(!search||norm(r.user).includes(search)));
-  const counts={ok:0,danger:0,warn:0,pending:0};bonusRows.forEach(r=>counts[r.cls]++);
-  const shortage=bonusRows.filter(r=>r.given<r.expected&&r.bonuses.length).reduce((s,r)=>s+r.expected-r.given,0);
-  const excess=bonusRows.filter(r=>r.given>r.expected).reduce((s,r)=>s+r.given-r.expected,0);
-  $('bonusStats').innerHTML=`<div class="stats"><div class="stat"><b>${extractQR($('qrisText').value).length}</b><span>QRPay records</span></div><div class="stat"><b>${extractDeposit($('depositText').value).filter(x=>x.bonus).length}</b><span>Bonus records</span></div><div class="stat"><b>${bonusRows.length}</b><span>Member audit</span></div><div class="stat"><b>${counts.ok}</b><span>🟢 Cocok</span></div><div class="stat"><b>${counts.danger}</b><span>🔴 Double</span></div><div class="stat"><b>${counts.warn}</b><span>🟠 Selisih</span></div><div class="stat"><b>${counts.pending}</b><span>🔵 Belum</span></div></div><div class="totals"><span class="pill">Total kekurangan: <b>${money(shortage)}</b></span><span class="pill">Total kelebihan: <b>${money(excess)}</b></span><span class="pill">Ditampilkan: <b>${rows.length}</b></span></div>`;
-  let h=`<div class="note" style="margin-bottom:10px">Urutan mengikuti HISTORY QRIS PAY. Deposit terbesar tetap dipakai untuk menghitung bonus, sementara transaksi bonus yang dikecualikan tidak dihitung sebagai deposit.</div>`;
-  if(!rows.length)h+='<div class="empty">Tidak ada data yang sesuai filter/pencarian.</div>';
-  else{
-    h+=`<div class="table-wrap"><table><thead><tr><th>Username</th><th>Deposit Terbesar</th><th>Bonus Seharusnya</th><th>Bonus Diberikan</th><th>Keterangan</th><th>Waktu Pemberian</th></tr></thead><tbody>`;
-    rows.forEach(r=>h+=`<tr class="${r.cls}"><td><span class="audit-user">${esc(r.user)}</span><br><small class="muted">${r.all.map(x=>money(x.amount)).join(' • ')}</small></td><td><span class="audit-amount">${money(r.largest.amount)}</span><br><small class="muted">${esc(r.largest.date||'-')}</small></td><td><span class="audit-strong">${money(r.expected)}</span></td><td><span class="audit-amount">${money(r.given)}</span></td><td><span class="badge b-${r.cls}">${esc(r.label)}</span></td><td>${r.bonuses.length?r.bonuses.map(x=>`<span class="audit-id">${esc(x.date||'-')}</span>`).join('<br>'):'-'}</td></tr>`);
-    h+='</tbody></table></div>';
-  }
-  $('bonusResult').innerHTML=h;
-}
+function runBonus(){const q=extractQR($('qrisText').value),dep=extractDeposit($('depositText').value),qMap=groupMax(q),bMap=groupMax(dep.filter(x=>x.bonus));bonusRows=[];for(const[k,arr]of qMap){const largest=[...arr].sort((a,b)=>b.amount-a.amount||b.time-a.time)[0],expected=Math.min(largest.amount*.05,100000),bonuses=(bMap.get(k)||[]).sort((a,b)=>a.time-b.time),given=bonuses.reduce((s,x)=>s+x.amount,0),[cls,label]=statusFor(given,expected,bonuses.length);bonusRows.push({user:largest.user,largest,expected,given,bonuses,all:arr,cls,label})}renderBonus();$('bonusTools').style.display=bonusRows.length?'flex':'none'}
+function renderBonus(){const search=norm($('bonusSearch')?.value||'');const rows=bonusRows.filter(r=>(bonusFilter==='ALL'||({'ok':'OK','danger':'DANGER','warn':'WARN','pending':'PENDING'}[r.cls]===bonusFilter))&&(!search||norm(r.user).includes(search)));const counts={ok:0,danger:0,warn:0,pending:0};bonusRows.forEach(r=>counts[r.cls]++);const shortage=bonusRows.filter(r=>r.given<r.expected&&r.bonuses.length).reduce((s,r)=>s+r.expected-r.given,0),excess=bonusRows.filter(r=>r.given>r.expected).reduce((s,r)=>s+r.given-r.expected,0);$('bonusStats').innerHTML=`<div class="stats"><div class="stat"><b>${extractQR($('qrisText').value).length}</b><span>QRPay records</span></div><div class="stat"><b>${extractDeposit($('depositText').value).filter(x=>x.bonus).length}</b><span>Bonus records</span></div><div class="stat"><b>${bonusRows.length}</b><span>Member audit</span></div><div class="stat"><b>${counts.ok}</b><span>🟢 Cocok</span></div><div class="stat"><b>${counts.danger}</b><span>🔴 Double</span></div><div class="stat"><b>${counts.warn}</b><span>🟠 Selisih</span></div><div class="stat"><b>${counts.pending}</b><span>🔵 Belum</span></div></div><div class="totals"><span class="pill">Total kekurangan: <b>${money(shortage)}</b></span><span class="pill">Total kelebihan: <b>${money(excess)}</b></span><span class="pill">Ditampilkan: <b>${rows.length}</b></span></div>`;let h=`<div class="note" style="margin-bottom:10px">Deposit terbesar dipilih per username. Bonus yang sudah ada tetap diperhitungkan agar tidak terjadi double bonus. Jika ada beberapa transaksi bonus, status selalu menandai <b>DOUBLE BONUS</b>.</div>`;if(!rows.length){h+='<div class="empty">Tidak ada data yang sesuai filter/pencarian.</div>'}else{h+=`<div class="table-wrap"><table><thead><tr><th>Username</th><th>Deposit Terbesar</th><th>Bonus Seharusnya</th><th>Bonus Diberikan</th><th>Keterangan</th><th>Waktu Pemberian</th></tr></thead><tbody>`;rows.sort((a,b)=>a.largest.time-b.largest.time).forEach(r=>h+=`<tr class="${r.cls}"><td><b>${esc(r.user)}</b><br><small class="muted">${r.all.map(x=>money(x.amount)).join(' • ')}</small></td><td><b>${money(r.largest.amount)}</b><br><small class="muted">${esc(r.largest.date||'-')}</small></td><td>${money(r.expected)}</td><td>${money(r.given)}</td><td><span class="badge b-${r.cls}">${esc(r.label)}</span></td><td>${r.bonuses.length?r.bonuses.map(x=>esc(x.date||'-')).join('<br>'):'-'}</td></tr>`);h+='</tbody></table></div>'}$('bonusResult').innerHTML=h}
 function runFirst(){
   const q=extractQR($('fqris').value),dep=extractDeposit($('fdeposit').value),mem=parseMembers($('members').value);
   firstRows=[];
   for(const m of mem){
-    // Only records classified as real DEPOSIT count. All other SCB/WD phrases are excluded.
-    const same=dep.filter(x=>x.category==='DEPOSIT'&&norm(x.user)===norm(m.user)&&x.dateKey===m.dateKey).sort((a,b)=>a.time-b.time);
-    const qrSame=q.filter(x=>norm(x.user)===norm(m.user)&&x.dateKey===m.dateKey).sort((a,b)=>a.time-b.time);
-    const first=same[0]||null;
-    const fallback=qrSame[0]||null;
-    const deposit=first?first.amount:(fallback?fallback.amount:0);
-    firstRows.push({no:0,register:m.dateKey,user:m.user,deposit,free:0,registerTime:m.time,depositTime:first?.time||fallback?.time||0});
+    const candidates=[
+      ...q.filter(x=>norm(x.user)===norm(m.user)&&x.dateKey===m.dateKey).map(x=>({...x,source:'QRIS PAY'})),
+      ...dep.filter(x=>norm(x.user)===norm(m.user)&&x.dateKey===m.dateKey).map(x=>({...x,source:'HISTORY DEPOSIT'}))
+    ].filter(x=>x.amount>0).sort((a,b)=>(a.time||0)-(b.time||0));
+    if(!candidates.length)continue;
+    const first=candidates[0];
+    firstRows.push({no:0,register:m.date,user:m.user,deposit:first.amount,free:0,depositTime:first.date,source:first.source,qrTime:first.time});
   }
-  firstRows.sort((a,b)=>a.register.localeCompare(b.register)||a.registerTime-b.registerTime);
-  firstRows.forEach((r,i)=>r.no=i+1);
-  renderFirst();$('firstTools').style.display=firstRows.length?'flex':'none';
+  firstRows.sort((a,b)=>(a.qrTime||0)-(b.qrTime||0));firstRows.forEach((r,i)=>r.no=i+1);renderFirst();$('firstTools').style.display=firstRows.length?'flex':'none'
 }
-function renderFirst(){
-  const search=norm($('firstSearch')?.value||''), rows=firstRows.filter(r=>!search||norm(r.user).includes(search));
-  const deposited=firstRows.filter(r=>r.deposit>0);
-  $('firstStats').innerHTML=`<div class="stats"><div class="stat"><b>${firstRows.length}</b><span>New Member</span></div><div class="stat"><b>${deposited.length}</b><span>Sudah deposit</span></div><div class="stat"><b>${firstRows.length-deposited.length}</b><span>Belum deposit</span></div><div class="stat"><b>${money(firstRows.reduce((s,x)=>s+x.deposit,0))}</b><span>Total first deposit</span></div><div class="stat"><b>0</b><span>Total freebet</span></div></div>`;
-  let h='';
-  if(!rows.length)h='<div class="empty">Tidak ada data yang sesuai pencarian.</div>';
-  else{
-    h=`<div class="table-wrap"><table><thead><tr><th>NO</th><th>REGISTER DATE</th><th>USER ID / USERNAME</th><th>DEPOSIT</th><th>FREEBET</th></tr></thead><tbody>`;
-    rows.forEach(r=>h+=`<tr class="${r.deposit?'ok':'pending'}"><td>${r.no}</td><td>${esc(r.register)}</td><td><span class="audit-user">${esc(agentUser(r.user))}</span></td><td>${r.deposit?`<span class="audit-amount">${money(r.deposit)}</span>`:'<span class="zero">Rp 0.00</span>'}</td><td><span class="zero">Rp 0.00</span></td></tr>`);
-    h+='</tbody></table></div>';
-  }
-  $('firstResult').innerHTML=h;
-}
-
+function renderFirst(){const search=norm($('firstSearch')?.value||'');const rows=firstRows.filter(r=>!search||norm(r.user).includes(search));$('firstStats').innerHTML=`<div class="stats"><div class="stat"><b>${parseMembers($('members').value).length}</b><span>New Member</span></div><div class="stat"><b>${firstRows.length}</b><span>First deposit hari sama</span></div><div class="stat"><b>${parseMembers($('members').value).length-firstRows.length}</b><span>Tidak deposit hari sama</span></div><div class="stat"><b>${money(firstRows.reduce((s,x)=>s+x.deposit,0))}</b><span>Total first deposit</span></div><div class="stat"><b>${money(firstRows.reduce((s,x)=>s+x.free,0))}</b><span>Total freebet</span></div></div>`;let h='';if(!rows.length)h='<div class="empty">Tidak ada data yang sesuai pencarian.</div>';else{h=`<div class="table-wrap"><table><thead><tr><th>NO</th><th>REGISTER DATE</th><th>USER ID / USERNAME</th><th>FIRST DEPOSIT</th><th>DEPOSIT TIME</th><th>SOURCE</th></tr></thead><tbody>`;rows.forEach(r=>h+=`<tr class="ok"><td>${r.no}</td><td>${r.register}</td><td><b>${esc(r.user)}</b></td><td>${money(r.deposit)}</td><td>${esc(r.depositTime||'-')}</td><td>${esc(r.source||'-')}</td></tr>`);h+='</tbody></table></div>'}$('firstResult').innerHTML=h}
 function csvEscape(v){const s=String(v??'');return /[,"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
 function download(name,content,type){const blob=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
 function bonusData(){return bonusRows.map(r=>[r.user,r.largest.amount,r.expected,r.given,r.label,r.bonuses.map(x=>x.date||'-').join(' | ')])}
-function firstData(){return firstRows.map(r=>[r.no,r.register,r.user,r.deposit,r.free])}
+function firstData(){return firstRows.map(r=>[r.no,r.register,r.user,r.deposit,r.depositTime,r.source])}
 function exportCSV(headers,data,name){download(name,'\ufeff'+[headers,...data].map(row=>row.map(csvEscape).join(',')).join('\r\n'),'text/csv;charset=utf-8')}
-function exportXLS(headers,data,name,title){let html='<html><head><meta charset="utf-8"></head><body><table border="1"><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>';data.forEach(row=>{html+='<tr>'+row.map(x=>'<td>'+esc(typeof x==='number'?plainMoney(x):x)+'</td>').join('')+'</tr>'});html+='</table></body></html>';download(name,html,'application/vnd.ms-excel;charset=utf-8')}
+function exportXLS(headers,data,name,title){
+  let html=`<html><head><meta charset="utf-8"></head><body><table border="1"><tr>${headers.map(x=>`<th>${esc(x)}</th>`).join('')}</tr>`;
+  data.forEach(row=>{html+=`<tr>${row.map(x=>{const isText=typeof x!=="number";return `<td${isText?' style="mso-number-format:"@""':''}>${esc(isText?x:plainMoney(x))}</td>`}).join('')}</tr>`});
+  html+='</table></body></html>';download(name,html,'application/vnd.ms-excel;charset=utf-8')
+}
 async function copyTable(headers,data){const text=[headers,...data].map(r=>r.join('\t')).join('\n');try{await navigator.clipboard.writeText(text);alert('Hasil berhasil disalin ke clipboard.')}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('Hasil berhasil disalin ke clipboard.')}}
 $('runBonusBtn').onclick=runBonus;$('clearBonusBtn').onclick=()=>{clear(['qrisText','depositText'],'bonusStats','bonusResult');bonusRows=[];$('bonusTools').style.display='none'};
 $('runFirstBtn').onclick=runFirst;$('clearFirstBtn').onclick=()=>{clear(['fqris','fdeposit','members'],'firstStats','firstResult');firstRows=[];$('firstTools').style.display='none'};
 $('bonusSearch').addEventListener('input',renderBonus);$('firstSearch').addEventListener('input',renderFirst);
 document.querySelectorAll('#bonusTools .filter-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#bonusTools .filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');bonusFilter=b.dataset.filter;renderBonus()}));
 $('copyBonusBtn').onclick=()=>copyTable(['Username','Deposit Terbesar','Bonus Seharusnya','Bonus Diberikan','Keterangan','Waktu Pemberian'],bonusData());$('csvBonusBtn').onclick=()=>exportCSV(['Username','Deposit Terbesar','Bonus Seharusnya','Bonus Diberikan','Keterangan','Waktu Pemberian'],bonusData(),'bonus-audit.csv');$('xlsBonusBtn').onclick=()=>exportXLS(['Username','Deposit Terbesar','Bonus Seharusnya','Bonus Diberikan','Keterangan','Waktu Pemberian'],bonusData(),'bonus-audit.xls','BONUS Audit');
-$('copyFirstBtn').onclick=()=>copyTable(['NO','REGISTER DATE','USER ID / USERNAME','DEPOSIT','FREEBET'],firstData());$('csvFirstBtn').onclick=()=>exportCSV(['NO','REGISTER DATE','USER ID / USERNAME','DEPOSIT','FREEBET'],firstData(),'new-member-first-deposit.csv');$('xlsFirstBtn').onclick=()=>exportXLS(['NO','REGISTER DATE','USER ID / USERNAME','DEPOSIT','FREEBET'],firstData(),'new-member-first-deposit.xls','First Deposit');
-
-/* =========================
-   4. INPUT BONUS HARIAN
-   ========================= */
-let dailyRows=[];
-const GAME_TYPES=['SPORT 1','LIGA SB','LIGA OMEGA','SSC','PG SOFT','PPLAY','CT CASINO','12LIVE','AFB GAMING 2022','DREAM GAMING','GD88','HABANERO','JDB','PHUMCASINO','TANGKAS','PKV'];
-
-function todayDateKey(){
-  const d=new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function todayDMY(){
-  const d=new Date();
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-}
-function usDateFromDate(d){
-  return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
-}
-function threeMonthRange(){
-  const end=new Date();
-  const start=new Date(end);
-  start.setMonth(start.getMonth()-3);
-  return {start,end,startKey:`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`,endKey:`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`,label:`${usDateFromDate(start)} - ${usDateFromDate(end)}`};
-}
-function indoMoney(n){
-  return new Intl.NumberFormat('id-ID',{maximumFractionDigits:0,useGrouping:true}).format(Math.round(Number(n)||0));
-}
-function displayDateTime(s){
-  return String(s||'-').trim();
-}
-function rowDateKeyFromText(s){
-  const m=String(s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if(!m)return null;
-  // Site data shown by the user uses DD/MM/YYYY. If an impossible day is found,
-  // treat it as MM/DD/YYYY so both common Chrome formats can be handled.
-  let a=+m[1],b=+m[2],y=+m[3];
-  if(a>12)return `${y}-${String(b).padStart(2,'0')}-${String(a).padStart(2,'0')}`;
-  if(b>12)return `${y}-${String(a).padStart(2,'0')}-${String(b).padStart(2,'0')}`;
-  return `${y}-${String(b).padStart(2,'0')}-${String(a).padStart(2,'0')}`;
-}
-function transactionDateText(line){
-  const m=String(line||'').match(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/i);
-  return m?m[0]:'';
-}
-function amountCandidatesAfterDate(line){
-  const s=String(line||'').replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-  const dm=transactionDateText(s);
-  if(!dm)return [];
-  const pos=s.indexOf(dm);
-  if(pos<0)return [];
-  const after=s.slice(pos+dm.length);
-  const matches=[...after.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-  return matches.map(m=>({token:m[1],index:m.index})).filter(x=>!String(x.token).includes('/'));
-}
-function amountCandidatesBeforeDate(line){
-  const s=String(line||'').replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-  const dm=transactionDateText(s);
-  const pos=dm?s.indexOf(dm):s.length;
-  const before=(pos>=0?s.slice(0,pos):s);
-  const matches=[...before.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-  return matches.map(m=>({token:m[1],index:m.index})).filter(x=>!String(x.token).includes('/'));
-}
-function transactionAmount(line,type='deposit'){
-  // Withdraw History places Withdraw Amount AFTER Date/Time. This is
-  // intentionally different from Deposit History, where the amount is often
-  // before the transaction date and account numbers can appear earlier.
-  if(type==='withdraw'){
-    const after=amountCandidatesAfterDate(line);
-    if(after.length)return parseMoneyToken(after[0].token);
-  }
-  const before=amountCandidatesBeforeDate(line);
-  return before.length?parseMoneyToken(before[before.length-1].token):0;
-}
-function detectGame(text){
-  const s=String(text||'').toUpperCase().replace(/\s+/g,' ');
-  const sorted=[...GAME_TYPES].sort((a,b)=>b.length-a.length);
-  return sorted.find(g=>s.includes(g))||'LAINNYA';
-}
-function parseTableTransactions(raw,type){
-  const s=String(raw||'').replace(/\r/g,'');
-  const out=[];
-  const lines=s.split(/\n+/);
-  for(let i=0;i<lines.length;i++){
-    const line=lines[i].trim();
-    if(!line)continue;
-    const date=transactionDateText(line);
-    if(!date)continue;
-    let amount=transactionAmount(line,type);
-    // Withdraw History values are displayed at a 1:1000 scale for this report.
-    // 500.00 -> 500,000; 1,000.00 -> 1,000,000.
-    if(type==='withdraw' && amount>0) amount=Math.round(amount*1000);
-    if(!(amount>0))continue;
-    const joined=[lines[i-1]||'',line,lines[i+1]||''].join(' ');
-    const lowLine=line.toLowerCase();
-    if(/\btotal records\b|\btotal amount\b/.test(lowLine))continue;
-    const category=type==='deposit'?depositHistoryCategory(joined):'WITHDRAW';
-    if(type==='deposit' && category!=='DEPOSIT')continue;
-    if(type==='withdraw' && !/(withdraw|wd\b|withdrawal|cashout)/i.test(joined) && type==='withdraw') {
-      // A filtered Withdraw source can omit the word "withdraw"; retain the row
-      // when it is in a clear table-like line with an amount and date.
-      if(!/[|]/.test(line) && !/\t/.test(line))continue;
-    }
-    const user=(line.match(/BEB@([A-Za-z0-9_.-]+)/i)||joined.match(/BEB@([A-Za-z0-9_.-]+)/i)||[])[1]||'';
-    out.push({user,date,dateKey:rowDateKeyFromText(date),time:timeValue(date)||new Date(date).getTime()||0,amount,game:detectGame(joined),type,raw:joined});
-  }
-  return out;
-}
-function dailyEligibleRows(raw){
-  const out=[];
-  for(const r of splitUserRecords(raw)){
-    if(!/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN\s+01/i.test(r.chunk))continue;
-    const dates=[...r.chunk.matchAll(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?/gi)].map(x=>x[0]);
-    const date=dates[0]||'';
-    if(!date||dateOnly(date)!==todayDateKey())continue;
-    let amount=0;
-    const dateLine=(r.chunk.split(/\n/).find(x=>date&&x.includes(date))||r.chunk).replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-    const cells=dateLine.split('|').map(x=>x.trim());
-    const di=cells.findIndex(x=>x.includes(date));
-    if(di>0){
-      const cell=cells[di-1];
-      const mm=[...cell.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      if(mm.length)amount=parseMoneyToken(mm[mm.length-1][1]);
-    }
-    if(!amount){
-      const clean=r.chunk.replace(/\*+/g,'');
-      const marker=clean.search(/SCB\s+A\s+BONUS\s+DEPOSIT\s+HARIAN\s+01/i);
-      const tail=marker>=0?clean.slice(marker):clean;
-      const beforeDate=date?tail.slice(0,Math.max(0,tail.indexOf(date))):tail;
-      const mm=[...beforeDate.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      const usable=mm.map(x=>x[1]).filter(x=>parseMoneyToken(x)>1);
-      if(usable.length)amount=parseMoneyToken(usable[usable.length-1]);
-    }
-    if(amount>0)out.push({user:r.user,amount,date,raw:r.chunk});
-  }
-  return out;
-}
-function renderDaily(){
-  const search=norm($('dailySearch')?.value||'');
-  let rows=dailyRows.filter(r=>!search||norm(r.user).includes(search));
-  const sort=$('dailySort')?.value||'user-asc';
-  rows.sort((a,b)=>{
-    if(sort==='user-asc')return a.user.localeCompare(b.user,undefined,{sensitivity:'base'});
-    if(sort==='user-desc')return b.user.localeCompare(a.user,undefined,{sensitivity:'base'});
-    if(sort==='amount-asc')return a.amount-b.amount||a.user.localeCompare(b.user);
-    return b.amount-a.amount||a.user.localeCompare(b.user);
-  });
-  const counts={};
-  dailyRows.forEach(r=>{const k=norm(r.user);counts[k]=(counts[k]||0)+1});
-  $('dailyStats').innerHTML=`<div class="stats"><div class="stat"><b>${dailyRows.length}</b><span>Bonus hari ini</span></div><div class="stat"><b>${Object.keys(counts).length}</b><span>Username</span></div><div class="stat"><b>${dailyRows.reduce((s,r)=>s+r.amount,0)?'Rp '+indoMoney(dailyRows.reduce((s,r)=>s+r.amount,0)):'Rp 0'}</b><span>Total bonus</span></div><div class="stat"><b>${Object.values(counts).filter(x=>x>1).length}</b><span>Username double+</span></div></div>`;
-  let h='';
-  if(!rows.length)h='<div class="empty">Tidak ada bonus harian pada tanggal hari ini yang sesuai pencarian.</div>';
-  else{
-    h+=`<div class="table-wrap"><table style="min-width:620px"><thead><tr><th>Username</th><th>Nominal Bonus</th><th>Waktu</th><th>Keterangan</th></tr></thead><tbody>`;
-    rows.forEach(r=>{
-      const c=counts[norm(r.user)]||1, fullUser=agentUser(r.user), label=c>1?`${esc(fullUser)} <span class="badge b-danger">${c}x+</span>`:esc(fullUser);
-      h+=`<tr class="${c>1?'danger':'ok'}"><td><span class="audit-user">${label}</span></td><td><span class="audit-amount">${String(Math.round(r.amount))}</span></td><td>${esc(r.date||'-')}</td><td>${c>1?'<span class="badge b-danger">DOUBLE BONUS</span>':'<span class="badge b-ok">BONUS HARIAN</span>'}</td></tr>`;
-    });
-    h+='</tbody></table></div>';
-  }
-  $('dailyResult').innerHTML=h;
-}
-function dailyCopyData(){
-  const counts={};dailyRows.forEach(r=>{counts[norm(r.user)]=(counts[norm(r.user)]||0)+1});
-  const rows=[...dailyRows].sort((a,b)=>a.user.localeCompare(b.user,undefined,{sensitivity:'base'}));
-  return rows.map(r=>[agentUser(r.user),String(Math.round(r.amount))]);
-}
-
-/* =========================
-   5. LAPORAN WITHDRAW
-   ========================= */
-let reportRows={deposit:[],withdraw:[]};
-function getSelectedGames(){
-  return [...document.querySelectorAll('#gameGrid input[type="checkbox"]:checked')].map(x=>x.value);
-}
-function inRange(key,range){
-  return !!key && key>=range.startKey && key<=range.endKey;
-}
-function parseReportDepositRows(raw){
-  const s=String(raw||'').replace(/\r/g,'');
-  const out=[];
-  const lines=s.split(/\n+/);
-  // REPORT LAPORAN WITHDRAW intentionally counts EVERY deposit row in the
-  // supplied Deposit History, including SCB A/B/C/D, FREEBET and rows with
-  // remarks. No bonus/category exclusion is applied here.
-  for(const line0 of lines){
-    const line=line0.trim();
-    if(!line)continue;
-    const dm=line.match(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?/i);
-    const um=line.match(/BEB@([A-Za-z0-9_.-]+)/i);
-    if(!dm||!um)continue;
-    const date=dm[0];
-    const clean=line.replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-    const pos=clean.indexOf(date);
-    const before=pos>=0?clean.slice(0,pos):clean;
-    const mh=[...before.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-    let amount=mh.length?parseMoneyToken(mh[mh.length-1][1]):0;
-    // If the copied row places the amount after Date/Time, use the first
-    // monetary token after the date as a fallback.
-    if(!amount){
-      const after=pos>=0?clean.slice(pos+date.length):'';
-      const ah=[...after.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      if(ah.length)amount=parseMoneyToken(ah[0][1]);
-    }
-    if(!(amount>0))continue;
-    out.push({user:agentUser(um[0]),date,dateKey:rowDateKeyFromText(date),time:timeValue(date)||0,amount,game:detectGame(line),type:'deposit',raw:line});
-  }
-  // Fallback to the existing parser for non-table/wrapped copies.
-  if(!out.length){
-    return extractDeposit(raw).map(x=>({...x,user:agentUser(x.user),game:detectGame(x.raw),type:'deposit'}));
-  }
-  return out;
-}
-function parseReportRows(raw,type,range){
-  const rows=type==='deposit'?parseReportDepositRows(raw):parseTableTransactions(raw,type);
-  return rows.filter(r=>inRange(r.dateKey,range));
-}
-function filteredReportRows(type,range){
-  const selected=getSelectedGames();
-  const rows=reportRows[type].filter(r=>inRange(r.dateKey,range));
-  if(!selected.length || selected.includes('ALL'))return rows;
-  return rows.filter(r=>selected.includes(r.game));
-}
-function latestTransaction(rows){
-  return [...rows].sort((a,b)=>(a.time||0)-(b.time||0)).at(-1)||null;
-}
-function reportStatus(dp,wd,bonus){
-  const v=dp-wd-bonus;
-  if(v>0)return ['win',`WIN (${indoMoney(v)})`,v];
-  if(v<0)return ['lose',`LOSE (${indoMoney(Math.abs(v))})`,v];
-  return ['draw','DRAW (0)',0];
-}
-function renderReport(){
-  const range=threeMonthRange();
-  const dep=filteredReportRows('deposit',range), wd=filteredReportRows('withdraw',range);
-  // For LAPORAN WITHDRAW only: TOTAL DP is the sum of every deposit-history
-  // row in range, including SCB A/B/C/D, bonus/freebet rows and rows carrying
-  // remarks. TOTAL BONUS is reported separately from explicit bonus categories
-  // so the source is never silently discarded.
-  const bonus=dep.filter(x=>/(SCB\s*[A-D]\b|BONUS|FREEBET)/i.test(x.raw||''));
-  const selected=getSelectedGames();
-  const bonusFiltered=(!selected.length||selected.includes('ALL'))?bonus:bonus.filter(x=>selected.includes(detectGame(x.raw)));
-  const totalDP=dep.reduce((s,x)=>s+x.amount,0), totalWD=wd.reduce((s,x)=>s+x.amount,0), totalBonus=bonusFiltered.reduce((s,x)=>s+x.amount,0);
-  const lastDP=latestTransaction(dep),lastWD=latestTransaction(wd);
-  const [cls,status]=reportStatus(totalDP,totalWD,totalBonus);
-  const rawId=$('memberId').value.trim();
-  const id=rawId?agentUser(rawId):'-';
-  const web=$('memberWeb').value.trim()||'MARIOBOLA';
-  const balance=$('memberBalance').value.trim()||'-';
-  const text=[
-    web,
-    `ID : ${id}`,
-    `DP : ${lastDP?indoMoney(lastDP.amount):'0'} | ${lastDP?displayDateTime(lastDP.date):'-'}`,
-    `TOTAL DP : ${indoMoney(totalDP)}`,
-    `WD : ${lastWD?indoMoney(lastWD.amount):'0'} | ${lastWD?displayDateTime(lastWD.date):'-'}`,
-    `TOTAL WD : ${indoMoney(totalWD)}`,
-    `SISA SALDO : ${balance}`,
-    '',
-    'STATISTIK 3 BULAN',
-    `TOTAL DP : ${indoMoney(totalDP)}`,
-    `TOTAL WD : ${indoMoney(totalWD)}`,
-    `TOTAL BONUS : ${indoMoney(totalBonus)}`,
-    `STATUS : ${status}`
-  ].join('\n');
-  $('reportStats').innerHTML=`<div class="report-kpi"><div class="stat"><b>${dep.length}</b><span>Deposit records</span></div><div class="stat"><b>${wd.length}</b><span>Withdraw records</span></div><div class="stat"><b>Rp ${indoMoney(totalDP)}</b><span>Total DP</span></div><div class="stat"><b>Rp ${indoMoney(totalWD)}</b><span>Total WD</span></div><div class="stat"><b>Rp ${indoMoney(totalBonus)}</b><span>Total Bonus</span></div></div><div class="note">Game aktif: ${selected.length&& !selected.includes('ALL')?selected.map(esc).join(', '):'Semua Game'} • Rentang: ${esc(range.label)}</div>`;
-  $('reportResult').innerHTML=`<div class="report-output"><span>${esc(text).replace(/(WIN \([^)]+\))/,'<span class="win">$1</span>').replace(/(LOSE \([^)]+\))/,'<span class="lose">$1</span>').replace(/(DRAW \(0\))/,'<span class="draw">$1</span>')}</span></div>`;
-  $('copyReportBtn').style.display='inline-block';
-  $('copyReportBtn').dataset.copy=text;
-}
-function initGameGrid(){
-  const box=$('gameGrid');
-  box.innerHTML=`<label><input type="checkbox" value="ALL" checked> ALL</label>`+GAME_TYPES.map(g=>`<label><input type="checkbox" value="${esc(g)}"> ${esc(g)}</label>`).join('');
-  box.querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{
-    if(i.value==='ALL'&&i.checked)box.querySelectorAll('input:not([value="ALL"])').forEach(x=>x.checked=false);
-    if(i.value!=='ALL'&&i.checked)box.querySelector('input[value="ALL"]').checked=false;
-    if(![...box.querySelectorAll('input')].some(x=>x.checked))box.querySelector('input[value="ALL"]').checked=true;
-  }));
-}
-function updateDynamicNotes(){
-  const range=threeMonthRange();
-  $('dailyDateNote').innerHTML=`Tanggal sistem hari ini: <b>${todayDMY()}</b>. Hanya <b>SCB A BONUS DEPOSIT HARIAN 01</b> pada tanggal tersebut yang dimasukkan.`;
-  $('reportDateNote').innerHTML=`DATA DIAMBIL DARI RENTANG TANGGAL <b>${esc(range.label)}</b>. Rentang ini diperbarui otomatis setiap hari berdasarkan tanggal perangkat.`;
-}
-
+$('copyFirstBtn').onclick=()=>copyTable(['NO','REGISTER DATE','USER ID / USERNAME','FIRST DEPOSIT','DEPOSIT TIME','SOURCE'],firstData());$('csvFirstBtn').onclick=()=>exportCSV(['NO','REGISTER DATE','USER ID / USERNAME','FIRST DEPOSIT','DEPOSIT TIME','SOURCE'],firstData(),'new-member-first-deposit.csv');$('xlsFirstBtn').onclick=()=>exportXLS(['NO','REGISTER DATE','USER ID / USERNAME','FIRST DEPOSIT','DEPOSIT TIME','SOURCE'],firstData(),'new-member-first-deposit.xls','First Deposit');
 function clear(ids,stats,res){ids.forEach(id=>$(id).value='');$(stats).innerHTML='';$(res).innerHTML=''}
-
-$('runDailyBtn').onclick=()=>{dailyRows=dailyEligibleRows($('dailySource').value);renderDaily();$('dailyTools').style.display=dailyRows.length?'flex':'none'};
-$('clearDailyBtn').onclick=()=>{clear(['dailySource'],'dailyStats','dailyResult');dailyRows=[];$('dailyTools').style.display='none'};
-$('dailySearch').addEventListener('input',renderDaily);
-$('dailySort').addEventListener('change',renderDaily);
-$('copyDailyBtn').onclick=()=>copyTable(['Username','Nominal'],dailyCopyData());
-$('csvDailyBtn').onclick=()=>exportCSV(['Username','Nominal'],dailyCopyData(),'bonus-harian.csv');
-
-$('runReportBtn').onclick=()=>{
-  const range=threeMonthRange();
-  reportRows.deposit=parseReportRows($('reportDeposit').value,'deposit',range);
-  reportRows.withdraw=parseReportRows($('reportWithdraw').value,'withdraw',range);
-  renderReport();
-};
-$('clearReportBtn').onclick=()=>{
-  clear(['memberId','memberRegister','memberBalance','reportDeposit','reportWithdraw'],'reportStats','reportResult');
-  $('memberWeb').value='MARIOBOLA';$('copyReportBtn').style.display='none';
-  initGameGrid();
-};
-$('copyReportBtn').onclick=()=>navigator.clipboard?.writeText($('copyReportBtn').dataset.copy||'').then(()=>alert('HASIL LAPORAN berhasil disalin.')).catch(()=>{const ta=document.createElement('textarea');ta.value=$('copyReportBtn').dataset.copy||'';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('HASIL LAPORAN berhasil disalin.')});
-initGameGrid();
-updateDynamicNotes();
-setInterval(updateDynamicNotes,60000);
-
 window.__amountFormatTest=function(){const cases={'2.500':2500,'12.500.000':12500000,'100.000.000':100000000,'2,500.000':2500000,'2,850.000':2850000,'1,000.000':1000000,'5,000,000.00':5000000,'5.000.000,00':5000000};for(const[k,v]of Object.entries(cases)){if(parseMoneyToken(k)!==v)throw new Error('Amount normalization failed: '+k+' -> '+parseMoneyToken(k))}if(money(2500)!=='Rp 2,500.00')throw new Error('International display failed');return 'PASS'};
-window.__selfTest=function(){const qr='BEB@TestUserBCA\nNama\n123456BCA\nPrabuPay mariobola_oauser 4398778b-be92-469d-bd58-cb6a18a886e7 100.00017891423490066293\n11/09/2026 11:59:09 PMQR PayConfirmed';const q=extractQR(qr);if(q.length!==1||q[0].amount!==100000)throw new Error('QR amount parser failed');const dh='BEB@TestUserBCA\nNama\nSCB\nSCB A BONUS DEPOSIT HARIAN 0110.00012/09/2026 12:00:00 AMAgent DepositConfirmed';const d=extractDeposit(dh);if(d.length!==1||d[0].amount!==10000||!d[0].bonus)throw new Error('Bonus parser failed');const mm='1 9/11/2026 10:06:22 PM BEB@TestUser';const m=parseMembers(mm);if(m.length!==1||m[0].dateKey!=='2026-09-11')throw new Error('Member date parser failed');const q2='BEB@TestUser\nBCA\nX\n**1,000.000** | 17891724390297766 | | 12/09/2026 08:20:39 AM | QR Pay | Confirmed\nBEB@TestUser2\nBCA\nX\n**2,850.000** | 17891726717165603 | | 12/09/2026 08:24:32 AM | QR Pay | Confirmed';const b='BEB@TestUser\nSCB A BONUS DEPOSIT HARIAN 0110.00012/09/2026 10:31:00 PMAgent DepositConfirmed';const qx=extractQR(q2),dx=extractDeposit(b);if(qx.length!==2||qx[0].amount!==1000000||qx[1].amount!==2850000)throw new Error('Chrome million QR parser failed');const largest=400000;const expected=Math.min(largest*.05,100000);if(expected!==20000||dx[0].amount!==10000)throw new Error('Largest/5% rule failed');const over='BEB@TestUser\nSCB A BONUS DEPOSIT HARIAN 0125.00012/09/2026 10:31:00 PMAgent DepositConfirmed';const od=extractDeposit(over);const st=statusFor(od[0].amount,expected,1);if(st[0]!=='warn'||!st[1].startsWith('KELEBIHAN'))throw new Error('Over bonus status failed');
+window.__selfTest=function(){const qr='BEB@TestUserBCA\nNama\n123456BCA\nPrabuPay mariobola_oauser 4398778b-be92-469d-bd58-cb6a18a886e7 100.00017891423490066293\n11/09/2026 11:59:09 PMQR PayConfirmed';const q=extractQR(qr);if(q.length!==1||q[0].amount!==100000)throw new Error('QR amount parser failed');const dh='BEB@TestUserBCA\nNama\nSCB\nSCB A BONUS DEPOSIT HARIAN 0110.00012/09/2026 12:00:00 AMAgent DepositConfirmed';const d=extractDeposit(dh);if(d.length!==1||d[0].amount!==10000||!d[0].bonus||d[0].category!=='NON_DEPOSIT')throw new Error('Bonus parser failed');const mm='1 9/11/2026 10:06:22 PM BEB@TestUser';const m=parseMembers(mm);if(m.length!==1||m[0].dateKey!=='2026-09-11')throw new Error('Member date parser failed');const q2='BEB@TestUser\nBCA\nX\n**1,000.000** | 17891724390297766 | | 12/09/2026 08:20:39 AM | QR Pay | Confirmed\nBEB@TestUser2\nBCA\nX\n**2,850.000** | 17891726717165603 | | 12/09/2026 08:24:32 AM | QR Pay | Confirmed';const b='BEB@TestUser\nSCB A BONUS DEPOSIT HARIAN 0110.00012/09/2026 10:31:00 PMAgent DepositConfirmed';const qx=extractQR(q2),dx=extractDeposit(b);if(qx.length!==2||qx[0].amount!==1000000||qx[1].amount!==2850000)throw new Error('Chrome million QR parser failed');const largest=400000;const expected=Math.min(largest*.05,100000);if(expected!==20000||dx[0].amount!==10000)throw new Error('Largest/5% rule failed');const over='BEB@TestUser\nSCB A BONUS DEPOSIT HARIAN 0125.00012/09/2026 10:31:00 PMAgent DepositConfirmed';const od=extractDeposit(over);const st=statusFor(od[0].amount,expected,1);if(st[0]!=='warn'||!st[1].startsWith('KELEBIHAN'))throw new Error('Over bonus status failed');
 const history='BEB@Marzuki\nBCA Marsuki 3890594688\nBCA YANA 6125279965\n**200.000** | 12/09/2026 12:07:40 AM | Agent Deposit | Confirmed\nBEB@Marzuki\nBCA Marsuki 3890594688\nSCB A BONUS DEPOSIT HARIAN 01\n**10.000** | 12/09/2026 12:07:51 AM | Agent Deposit | Confirmed';
-const hd=extractDeposit(history);if(hd.length!==2||hd[0].category!=='DEPOSIT'||hd[0].amount!==200000||hd[0].bonus)throw new Error('Plain HISTORY DEPOSIT classification failed');if(hd[1].category!=='BONUS_DEPOSIT'||hd[1].amount!==10000||!hd[1].bonus)throw new Error('SCB bonus HISTORY DEPOSIT classification failed');
-const batal='BEB@TestBatal\nBCA\nX\n**50.000** | 17891724390297766 | 12/09/2026 08:20:39 AM | BATAL WD | Confirmed';const bw=extractDeposit(batal);if(bw.length!==1||bw[0].category!=='BATAL_WD'||bw[0].bonus)throw new Error('BATAL WD classification failed');
-if(floorBonusAmount(1250)!==1000||floorBonusAmount(12750)!==12500||floorBonusAmount(25890)!==25500)throw new Error('Bonus floor rounding failed');
-const wh='# Withdraw History\nTotal Records: 14 Total Amount: 5,390.00\n| 1 | BEB@omenbego | BCA | Osep | 6891008578 | 07/09/2026 01:44 | 500.00 | 500.69 | 0.69 | Member Withdraw | Confirmed | 07/09/2026 01:45 | | beb@wahyupu (ABD)\n| 2 | BEB@omenbego | BCA | Osep | 6891008578 | 20/08/2026 22:02 | 467.00 | 500.19 | 33.19 | Member Withdraw | Confirmed | 20/08/2026 22:04 | | beb@wahyupu (ABD)';
-const wp=parseTableTransactions(wh,'withdraw');if(wp.length!==2||wp[0].amount!==500000||wp[1].amount!==467000)throw new Error('Withdraw amount-after-date x1000 parser failed');
-if(agentUser('omenbego')!=='BEB@omenbego'||agentUser('BEB@Atikkk')!=='BEB@Atikkk')throw new Error('Agent username prefix failed');
-const sampleStatus=reportStatus(9224000,5390000,148500);if(sampleStatus[2]!==3685500)throw new Error('Report status arithmetic failed');
-const membersFull=parseMembers('1 | 9/14/2026 10:45:53 PM | BEB@MarioVip09 | Full | No | Open\n2 | 9/14/2026 10:45:12 PM | BEB@TORINO88 | Full | No | Open');if(membersFull.length!==2||membersFull[0].date!=='9/14/2026 10:45:53 PM'||membersFull[1].date!=='9/14/2026 10:45:12 PM'||membersFull[0].user!=='BEB@MarioVip09')throw new Error('New Member full register datetime parser failed');
-const reportDepAll=parseReportDepositRows('Total Records: 4 Total Amount: 52.50\n| 1 | BEB@Goarmiamang | BCA | X | 2.500 | 14/09/2026 00:06:03 AM | Confirmed |\n| 2 | BEB@Goarmiamang | SCB A BONUS DEPOSIT HARIAN 01 | 15.000 | 13/09/2026 00:00:00 AM | Confirmed |\n| 3 | BEB@Goarmiamang | SCB B BONUS MEMBER BARU | 10.000 | 12/09/2026 00:00:00 AM | Confirmed |\n| 4 | BEB@Goarmiamang | BATAL WD | 25.000 | 11/09/2026 00:00:00 AM | Confirmed |');if(reportDepAll.length!==4||reportDepAll.reduce((a,x)=>a+x.amount,0)!==52500)throw new Error('Report all-deposit total parser failed');
-const reportBonusAll=reportDepAll.filter(x=>/(SCB\s*[A-D]\b|BONUS|FREEBET)/i.test(x.raw||''));if(reportBonusAll.reduce((a,x)=>a+x.amount,0)!==25000)throw new Error('Report bonus total parser failed');
-return 'PASS'};
+const hd=extractDeposit(history);if(hd.length!==2||hd[0].category!=='DEPOSIT'||hd[0].amount!==200000||hd[0].bonus)throw new Error('Plain HISTORY DEPOSIT classification failed');if(hd[1].category!=='NON_DEPOSIT'||hd[1].amount!==10000||!hd[1].bonus)throw new Error('SCB bonus HISTORY DEPOSIT classification failed');
+const batal='BEB@TestBatal\nBCA\nX\n**50.000** | 17891724390297766 | 12/09/2026 08:20:39 AM | BATAL WD | Confirmed';const bw=extractDeposit(batal);if(bw.length!==1||bw[0].category!=='NON_DEPOSIT'||bw[0].bonus)throw new Error('BATAL WD classification failed');
+const exclusions='BEB@TestX\nBCA\n**50.000** | 12/09/2026 08:20:39 AM | SCB B BONUS MEMBER BARU | Confirmed\nBEB@TestX\nBCA\n**60.000** | 12/09/2026 08:21:39 AM | SCB C BONUS REFERRAL TWO POINT FIVE PERCENT | Confirmed\nBEB@TestX\nBCA\n**70.000** | 12/09/2026 08:22:39 AM | SCB D BONUS CASHBACK SLOT GAMES | Confirmed\nBEB@TestX\nBCA\n**80.000** | 12/09/2026 08:23:39 AM | FREEBET | Confirmed\nBEB@TestX\nBCA\n**90.000** | 12/09/2026 08:24:39 AM | WD DIKEMBALIKAN | Confirmed\nBEB@TestX\nBCA\n**100.000** | 12/09/2026 08:25:39 AM | Agent Deposit | Confirmed';const ex=extractDeposit(exclusions).filter(x=>x.category==='DEPOSIT');if(ex.length!==1||ex[0].amount!==100000)throw new Error('Non-deposit exclusion failed');
+const memberFull=parseMembers('1 9/15/2026 7:41:10 PM BEB@MarioVip14');if(memberFull[0].date!=='9/15/2026 7:41:10 PM')throw new Error('Full member timestamp failed');
+if(floorBonusAmount(1250)!==1000||floorBonusAmount(12750)!==12500||floorBonusAmount(25890)!==25500)throw new Error('Bonus floor rounding failed');return 'PASS'};
 try{window.__selfTest();console.info('MARIOBOLA Support Tools self-test: PASS')}catch(e){console.error('Self-test failed',e)}
 </script></body></html>
