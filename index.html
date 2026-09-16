@@ -95,7 +95,7 @@ table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{p
 <section id="daily" class="page">
 <div class="card">
   <h2>Input Bonus Harian</h2>
-  <p class="hint">Tempel langsung hasil <b>copy dari Chrome → Deposit History</b>. Sistem otomatis mengambil transaksi <b>SCB A BONUS DEPOSIT HARIAN</b> pada <b>tanggal sebelumnya</b>. Jika hari ini 16/09/2026, maka yang diambil adalah bonus tanggal 15/09/2026. Hasil hanya terdiri dari <b>ID / Username</b> dan <b>Nominal Bonus Deposit</b>.</p>
+  <p class="hint">Tempel langsung hasil <b>copy dari Chrome → Deposit History</b>. Sistem otomatis menentukan tanggal kerja berdasarkan <b>Waktu Indonesia (Asia/Jakarta)</b>, bukan jam PC/desktop. Jadi jika tanggal kerja Indonesia 16/09/2026, sistem membaca bonus tanggal 15/09/2026. Tidak ada pengaturan tanggal/jam/timezone pada bagian ini. Hasil hanya terdiri dari <b>ID / Username</b> dan <b>Nominal Bonus Deposit</b>. Gunakan pilihan sortiran untuk mengurutkan hasil.</p>
   <div class="daily-grid" style="margin-top:14px">
     <div>
       <div class="section-label"><h3>SUMBER DEPOSIT HISTORY</h3></div>
@@ -493,16 +493,6 @@ $('copyFirstBtn').onclick=()=>copyTable(['NO','REGISTER DATE','USER ID / USERNAM
 let dailyRows=[];
 const GAME_TYPES=['SPORT 1','LIGA SB','LIGA OMEGA','SSC','PG SOFT','PPLAY','CT CASINO','12LIVE','AFB GAMING 2022','DREAM GAMING','GD88','HABANERO','JDB','PHUMCASINO','TANGKAS','PKV'];
 
-function yesterdayDateKey(){
-  const d=new Date();
-  d.setDate(d.getDate()-1);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function yesterdayDMY(){
-  const d=new Date();
-  d.setDate(d.getDate()-1);
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-}
 function usDateFromDate(d){
   return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
 }
@@ -595,36 +585,60 @@ function parseTableTransactions(raw,type){
   }
   return out;
 }
+function indonesiaDateKey(offsetDays=0,now=new Date()){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const utc=Date.UTC(+parts.year,+parts.month-1,+parts.day+offsetDays);
+  const d=new Date(utc);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+
 function dailyEligibleRows(raw){
   const out=[];
-  const targetDate=yesterdayDateKey();
-  const clean=String(raw||'').replace(/<br\s*\/?>(?=\s*)/gi,' ').replace(/<[^>]*>/g,' ');
-  const bonusRx=/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN(?:\s+01)?/gi;
+  const targetDate=indonesiaDateKey(-1);
+  const lines=String(raw||'').replace(/\r/g,'').split(/\n+/);
+  const bonusRx=/SCB\s+A\s+BONUS\s+DEPOSIT\s+HARIAN\s+01\b/i;
   const dateRx=/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?/i;
-  let match;
-  // Each SCB A bonus row is anchored by the exact bonus label. The first
-  // date after that label is the transaction date; the BEB@ username after
-  // that date is the recipient/agent ID. This avoids accidentally reading
-  // the later confirmation timestamp as a second transaction.
-  while((match=bonusRx.exec(clean))){
-    const tail=clean.slice(match.index+match[0].length);
-    const dm=tail.match(dateRx);
+  for(let i=0;i<lines.length;i++){
+    const line=String(lines[i]||'').replace(/<br\s*\/?>(?=\s*)/gi,' ').replace(/<[^>]*>/g,' ').trim();
+    if(!bonusRx.test(line))continue;
+
+    // Build exactly one transaction block around this bonus entry. The
+    // nearest previous transaction date marks the end of the previous row;
+    // the nearest next date belongs to this row. This handles Chrome
+    // clipboard data whether a row is kept on one line or wrapped over lines.
+    let prevDateIndex=-1;
+    for(let j=i-1;j>=0;j--){
+      if(dateRx.test(String(lines[j]||''))){prevDateIndex=j;break;}
+    }
+    let nextDateIndex=-1;
+    for(let j=i;j<lines.length;j++){
+      if(dateRx.test(String(lines[j]||''))){nextDateIndex=j;break;}
+    }
+    if(nextDateIndex<0)continue;
+    const block=lines.slice(prevDateIndex+1,nextDateIndex+1).join(' ')
+      .replace(/<br\s*\/?>(?=\s*)/gi,' ')
+      .replace(/<[^>]*>/g,' ')
+      .replace(/\s+/g,' ')
+      .trim();
+    if(!bonusRx.test(block))continue;
+
+    const dm=block.match(dateRx);
     if(!dm||dateOnly(dm[0])!==targetDate)continue;
-    const date=dm[0], datePos=tail.indexOf(date);
-    const amountPart=tail.slice(0,datePos);
+    const date=dm[0];
+    const datePos=block.indexOf(date);
+    if(datePos<0)continue;
+    const amountPart=block.slice(0,datePos);
     const amounts=[...amountPart.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
     if(!amounts.length)continue;
     const amount=parseMoneyToken(amounts[amounts.length-1][1]);
     if(!(amount>0))continue;
 
-    // The MEMBER username is the uppercase `BEB@...` value in the same
-    // transaction row, before the transaction date. The `beb@...` value
-    // appearing after the date is the admin/operator and MUST NOT be used.
-    const beforeBonus=clean.slice(0,match.index);
-    const users=[...beforeBonus.matchAll(/BEB\\?@[A-Za-z0-9_.-]+/g)];
-    const userMatch=users.length?users[users.length-1][0]:'';
+    // Member username MUST be the uppercase BEB@... value. Lowercase
+    // beb@... values are admin/operator IDs and are intentionally ignored.
+    const userMatches=block.match(/BEB\\?@[A-Za-z0-9_.-]+/g)||[];
+    const userMatch=userMatches.find(v=>/^BEB\\?@/.test(v));
     if(!userMatch)continue;
-    out.push({user:agentUser(userMatch),amount,date,raw:match[0]+' '+tail.slice(0,datePos+date.length)});
+    out.push({user:agentUser(userMatch),amount,date,time:timeValue(date),raw:block});
   }
   return out;
 }
@@ -636,9 +650,9 @@ function renderDaily(){
   else if(sort==='ZA')rows.sort((a,b)=>norm(b.user).localeCompare(norm(a.user),'en',{numeric:true,sensitivity:'base'})||(a.time||0)-(b.time||0));
   else if(sort==='AMOUNT_DESC')rows.sort((a,b)=>b.amount-a.amount||(a.time||0)-(b.time||0));
   else if(sort==='AMOUNT_ASC')rows.sort((a,b)=>a.amount-b.amount||(a.time||0)-(b.time||0));
-  $('dailyStats').innerHTML=`<div class="stats"><div class="stat"><b>${dailyRows.length}</b><span>Bonus tanggal sebelumnya</span></div><div class="stat"><b>${new Set(dailyRows.map(r=>norm(r.user))).size}</b><span>Username</span></div><div class="stat"><b>${dailyRows.reduce((s,r)=>s+r.amount,0)?'Rp '+indoMoney(dailyRows.reduce((s,r)=>s+r.amount,0)):'Rp 0'}</b><span>Total bonus</span></div></div>`;
+  $('dailyStats').innerHTML=`<div class="stats"><div class="stat"><b>${dailyRows.length}</b><span>Bonus ditemukan</span></div><div class="stat"><b>${new Set(dailyRows.map(r=>norm(r.user))).size}</b><span>Username</span></div><div class="stat"><b>${dailyRows.reduce((s,r)=>s+r.amount,0)?'Rp '+indoMoney(dailyRows.reduce((s,r)=>s+r.amount,0)):'Rp 0'}</b><span>Total bonus</span></div></div>`;
   let h='';
-  if(!rows.length)h='<div class="empty">Tidak ada SCB A BONUS DEPOSIT HARIAN pada tanggal sebelumnya yang sesuai pencarian.</div>';
+  if(!rows.length)h='<div class="empty">Tidak ada SCB A BONUS DEPOSIT HARIAN 01 yang sesuai pencarian.</div>';
   else{
     h+=`<div class="table-wrap"><table style="min-width:420px"><thead><tr><th>ID / Username</th><th>Nominal Bonus Deposit</th></tr></thead><tbody>`;
     rows.forEach(r=>{
