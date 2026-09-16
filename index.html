@@ -95,8 +95,7 @@ table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{p
 <section id="daily" class="page">
 <div class="card">
   <h2>Input Bonus Harian</h2>
-  <p class="hint">Tempel langsung hasil <b>copy dari Chrome → Deposit History</b>. Sistem mengambil transaksi <b>SCB A BONUS DEPOSIT HARIAN 01</b> pada tanggal hari ini, menghitung username yang menerima bonus lebih dari sekali, lalu menyediakan sortir berdasarkan username atau nominal.</p>
-  <div class="note" id="dailyDateNote"></div>
+  <p class="hint">Tempel langsung hasil <b>copy dari Chrome → Deposit History</b>. Sistem otomatis mengambil transaksi <b>SCB A BONUS DEPOSIT HARIAN 01</b> pada <b>tanggal sebelumnya</b>. Jika hari ini 16/09/2026, maka yang diambil adalah bonus tanggal 15/09/2026. Hasil hanya terdiri dari <b>ID / Username</b> dan <b>Nominal Bonus Deposit</b>.</p>
   <div class="daily-grid" style="margin-top:14px">
     <div>
       <div class="section-label"><h3>SUMBER DEPOSIT HISTORY</h3></div>
@@ -110,13 +109,7 @@ table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{p
   <div id="dailyStats"></div>
   <div class="toolbar" id="dailyTools" style="display:none">
     <input id="dailySearch" placeholder="Cari username..." autocomplete="off">
-    <select id="dailySort" class="sort-select">
-      <option value="user-asc">Username A → Z</option>
-      <option value="user-desc">Username Z → A</option>
-      <option value="amount-asc">Nominal kecil → besar</option>
-      <option value="amount-desc">Nominal besar → kecil</option>
-    </select>
-    <button class="export" id="copyDailyBtn">Copy Hasil</button>
+        <button class="export" id="copyDailyBtn">Copy Hasil</button>
     <button class="export" id="csvDailyBtn">Export CSV</button>
   </div>
   <div id="dailyResult"></div>
@@ -493,12 +486,14 @@ $('copyFirstBtn').onclick=()=>copyTable(['NO','REGISTER DATE','USER ID / USERNAM
 let dailyRows=[];
 const GAME_TYPES=['SPORT 1','LIGA SB','LIGA OMEGA','SSC','PG SOFT','PPLAY','CT CASINO','12LIVE','AFB GAMING 2022','DREAM GAMING','GD88','HABANERO','JDB','PHUMCASINO','TANGKAS','PKV'];
 
-function todayDateKey(){
+function yesterdayDateKey(){
   const d=new Date();
+  d.setDate(d.getDate()-1);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function todayDMY(){
+function yesterdayDMY(){
   const d=new Date();
+  d.setDate(d.getDate()-1);
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
 function usDateFromDate(d){
@@ -595,53 +590,43 @@ function parseTableTransactions(raw,type){
 }
 function dailyEligibleRows(raw){
   const out=[];
-  for(const r of splitUserRecords(raw)){
-    if(!/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN\s+01/i.test(r.chunk))continue;
-    const dates=[...r.chunk.matchAll(/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?/gi)].map(x=>x[0]);
-    const date=dates[0]||'';
-    if(!date||dateOnly(date)!==todayDateKey())continue;
-    let amount=0;
-    const dateLine=(r.chunk.split(/\n/).find(x=>date&&x.includes(date))||r.chunk).replace(/\*+/g,'').replace(/<[^>]*>/g,' ');
-    const cells=dateLine.split('|').map(x=>x.trim());
-    const di=cells.findIndex(x=>x.includes(date));
-    if(di>0){
-      const cell=cells[di-1];
-      const mm=[...cell.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      if(mm.length)amount=parseMoneyToken(mm[mm.length-1][1]);
-    }
-    if(!amount){
-      const clean=r.chunk.replace(/\*+/g,'');
-      const marker=clean.search(/SCB\s+A\s+BONUS\s+DEPOSIT\s+HARIAN\s+01/i);
-      const tail=marker>=0?clean.slice(marker):clean;
-      const beforeDate=date?tail.slice(0,Math.max(0,tail.indexOf(date))):tail;
-      const mm=[...beforeDate.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
-      const usable=mm.map(x=>x[1]).filter(x=>parseMoneyToken(x)>1);
-      if(usable.length)amount=parseMoneyToken(usable[usable.length-1]);
-    }
-    if(amount>0)out.push({user:r.user,amount,date,raw:r.chunk});
+  const targetDate=yesterdayDateKey();
+  const clean=String(raw||'').replace(/<br\s*\/?>(?=\s*)/gi,' ').replace(/<[^>]*>/g,' ');
+  const bonusRx=/SCB\s*A\s+BONUS\s+DEPOSIT\s+HARIAN\s+01/gi;
+  const dateRx=/\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:(?:AM|PM))?/i;
+  let match;
+  // Each SCB A bonus row is anchored by the exact bonus label. The first
+  // date after that label is the transaction date; the BEB@ username after
+  // that date is the recipient/agent ID. This avoids accidentally reading
+  // the later confirmation timestamp as a second transaction.
+  while((match=bonusRx.exec(clean))){
+    const tail=clean.slice(match.index+match[0].length);
+    const dm=tail.match(dateRx);
+    if(!dm||dateOnly(dm[0])!==targetDate)continue;
+    const date=dm[0], datePos=tail.indexOf(date);
+    const amountPart=tail.slice(0,datePos);
+    const amounts=[...amountPart.matchAll(new RegExp('('+MONEY_TOKEN+')','g'))];
+    if(!amounts.length)continue;
+    const amount=parseMoneyToken(amounts[amounts.length-1][1]);
+    if(!(amount>0))continue;
+
+    const afterDate=tail.slice(datePos+date.length);
+    const userMatch=afterDate.match(/BEB@([A-Za-z0-9_.-]+)/i);
+    if(!userMatch)continue;
+    out.push({user:agentUser(userMatch[0]),amount,date,raw:match[0]+' '+tail.slice(0,datePos+date.length)});
   }
   return out;
 }
 function renderDaily(){
   const search=norm($('dailySearch')?.value||'');
-  let rows=dailyRows.filter(r=>!search||norm(r.user).includes(search));
-  const sort=$('dailySort')?.value||'user-asc';
-  rows.sort((a,b)=>{
-    if(sort==='user-asc')return a.user.localeCompare(b.user,undefined,{sensitivity:'base'});
-    if(sort==='user-desc')return b.user.localeCompare(a.user,undefined,{sensitivity:'base'});
-    if(sort==='amount-asc')return a.amount-b.amount||a.user.localeCompare(b.user);
-    return b.amount-a.amount||a.user.localeCompare(b.user);
-  });
-  const counts={};
-  dailyRows.forEach(r=>{const k=norm(r.user);counts[k]=(counts[k]||0)+1});
-  $('dailyStats').innerHTML=`<div class="stats"><div class="stat"><b>${dailyRows.length}</b><span>Bonus hari ini</span></div><div class="stat"><b>${Object.keys(counts).length}</b><span>Username</span></div><div class="stat"><b>${dailyRows.reduce((s,r)=>s+r.amount,0)?'Rp '+indoMoney(dailyRows.reduce((s,r)=>s+r.amount,0)):'Rp 0'}</b><span>Total bonus</span></div><div class="stat"><b>${Object.values(counts).filter(x=>x>1).length}</b><span>Username double+</span></div></div>`;
+  const rows=dailyRows.filter(r=>!search||norm(r.user).includes(search));
+  $('dailyStats').innerHTML=`<div class="stats"><div class="stat"><b>${dailyRows.length}</b><span>Bonus tanggal sebelumnya</span></div><div class="stat"><b>${new Set(dailyRows.map(r=>norm(r.user))).size}</b><span>Username</span></div><div class="stat"><b>${dailyRows.reduce((s,r)=>s+r.amount,0)?'Rp '+indoMoney(dailyRows.reduce((s,r)=>s+r.amount,0)):'Rp 0'}</b><span>Total bonus</span></div></div>`;
   let h='';
-  if(!rows.length)h='<div class="empty">Tidak ada bonus harian pada tanggal hari ini yang sesuai pencarian.</div>';
+  if(!rows.length)h='<div class="empty">Tidak ada SCB A BONUS DEPOSIT HARIAN 01 pada tanggal sebelumnya yang sesuai pencarian.</div>';
   else{
-    h+=`<div class="table-wrap"><table style="min-width:620px"><thead><tr><th>Username</th><th>Nominal Bonus</th><th>Waktu</th><th>Keterangan</th></tr></thead><tbody>`;
+    h+=`<div class="table-wrap"><table style="min-width:420px"><thead><tr><th>ID / Username</th><th>Nominal Bonus Deposit</th></tr></thead><tbody>`;
     rows.forEach(r=>{
-      const c=counts[norm(r.user)]||1, fullUser=agentUser(r.user), label=c>1?`${esc(fullUser)} <span class="badge b-danger">${c}x+</span>`:esc(fullUser);
-      h+=`<tr class="${c>1?'danger':'ok'}"><td><span class="audit-user">${label}</span></td><td><span class="audit-amount">${String(Math.round(r.amount))}</span></td><td>${esc(r.date||'-')}</td><td>${c>1?'<span class="badge b-danger">DOUBLE BONUS</span>':'<span class="badge b-ok">BONUS HARIAN</span>'}</td></tr>`;
+      h+=`<tr><td><span class="audit-user">${esc(agentUser(r.user))}</span></td><td><span class="audit-amount">${String(Math.round(r.amount))}</span></td></tr>`;
     });
     h+='</tbody></table></div>';
   }
@@ -649,8 +634,8 @@ function renderDaily(){
 }
 function dailyCopyData(){
   const counts={};dailyRows.forEach(r=>{counts[norm(r.user)]=(counts[norm(r.user)]||0)+1});
-  const rows=[...dailyRows].sort((a,b)=>a.user.localeCompare(b.user,undefined,{sensitivity:'base'}));
-  return rows.map(r=>[agentUser(r.user),String(Math.round(r.amount))]);
+  // Preserve the exact transaction order from Deposit History.
+  return dailyRows.map(r=>[agentUser(r.user),String(Math.round(r.amount))]);
 }
 
 /* =========================
@@ -763,7 +748,6 @@ function initGameGrid(){
 }
 function updateDynamicNotes(){
   const range=threeMonthRange();
-  $('dailyDateNote').innerHTML=`Tanggal sistem hari ini: <b>${todayDMY()}</b>. Hanya <b>SCB A BONUS DEPOSIT HARIAN 01</b> pada tanggal tersebut yang dimasukkan.`;
   $('reportDateNote').innerHTML=`DATA DIAMBIL DARI RENTANG TANGGAL <b>${esc(range.label)}</b>. Rentang ini diperbarui otomatis setiap hari berdasarkan tanggal perangkat.`;
 }
 
@@ -772,7 +756,6 @@ function clear(ids,stats,res){ids.forEach(id=>$(id).value='');$(stats).innerHTML
 $('runDailyBtn').onclick=()=>{dailyRows=dailyEligibleRows($('dailySource').value);renderDaily();$('dailyTools').style.display=dailyRows.length?'flex':'none'};
 $('clearDailyBtn').onclick=()=>{clear(['dailySource'],'dailyStats','dailyResult');dailyRows=[];$('dailyTools').style.display='none'};
 $('dailySearch').addEventListener('input',renderDaily);
-$('dailySort').addEventListener('change',renderDaily);
 $('copyDailyBtn').onclick=()=>copyTable(['Username','Nominal'],dailyCopyData());
 $('csvDailyBtn').onclick=()=>exportCSV(['Username','Nominal'],dailyCopyData(),'bonus-harian.csv');
 
