@@ -460,36 +460,73 @@ export function auditBonuses(qrText, historyText, opts={}){
   return rows;
 }
 export function processDailyBonus(historyText, opts={}){
-  const records=parseReport(historyText,'deposit-history');
-  const bonus=getDailyBonusRecords(records);
-  const excluded=new Set((opts.excludedRemarks||CONFIG.excludedRemarks).map(norm));
-  const filtered=bonus.filter(r=>!excluded.has(norm(r.remarkStatus)) && r.remarkStatus==='NORMAL');
+  // 1.2 INPUT BONUS HARIAN HAS ITS OWN READ PATH.
+  // Do not call auditBonuses() or depend on the 1.1 reconciliation rules here.
+  // The only business condition is: To Bank contains SCB A BONUS DEPOSIT HARIAN.
+  // Payment Method may be present (normally Agent Deposit), but the input report format
+  // may also omit Payment Method/Status columns. A blank status is therefore accepted;
+  // when a status is present, only Confirmed records are included.
+  const rawRecords=parseLoose(historyText,'deposit-history');
+  const target=norm(CONFIG.bonusTarget);
 
-  // DOUBLE BONUS is determined by the SAME username + SAME calendar date only.
+  function inputDateKey(value){
+    const parsed=parseDateTime(value);
+    if(parsed) return calendarDateKey(parsed);
+    const m=clean(value).match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+    return m ? `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}` : '';
+  }
+
+  const bonus=rawRecords.map((r,i)=>{
+    const username=clean(get(r,'User Name','Username','UserName'));
+    const toBank=clean(get(r,'To Bank'));
+    const amountRaw=clean(get(r,'Amount','Deposit','Nominal'));
+    const status=clean(get(r,'Status'));
+    const dateRaw=clean(get(r,'Date','Date/Time','Transaction Date'));
+    const paymentMethod=clean(get(r,'Payment Method'));
+    return {
+      row:i+1, username, toBank, amount:Math.trunc(parseAmount(amountRaw)), amountRaw,
+      dateRaw, date:parseDateTime(dateRaw), calendarDate:inputDateKey(dateRaw),
+      paymentMethod, status
+    };
+  }).filter(r=>{
+    if(!r.username || r.amount<=0) return false;
+    if(!norm(r.toBank).includes(target)) return false;
+    return !r.status || norm(r.status)==='CONFIRMED';
+  });
+
+  // DOUBLE BONUS is only an audit flag: every matching transaction remains in the output.
   const byDay=new Map();
-  for(const r of filtered){
-    const key=makeDayKey(r.username,calendarDateKey(r.date));
+  for(const r of bonus){
+    const key=makeDayKey(r.username,r.calendarDate);
     if(!byDay.has(key))byDay.set(key,[]);
     byDay.get(key).push(r);
   }
-  const rows=filtered.map(r=>{
-    const key=makeDayKey(r.username,calendarDateKey(r.date));
-    const sameDay=byDay.get(key)||[];
-    const doubleBonus=sameDay.length>1;
-    return {
-      username:r.username,
-      amount:r.amount,
-      date:r.dateRaw,
-      status:r.status,
-      doubleBonus,
-      hidden:false
-    };
-  });
+
+  const rows=bonus.map(r=>({
+    username:r.username,
+    amount:r.amount,
+    date:r.dateRaw,
+    status:r.status||'CONFIRMED',
+    doubleBonus:(byDay.get(makeDayKey(r.username,r.calendarDate))||[]).length>1,
+    calendarDate:r.calendarDate,
+    toBank:r.toBank,
+    hidden:false
+  }));
+
   const sort=opts.sort||'amount-desc';
-  rows.sort((a,b)=>sort==='username-asc'?a.username.localeCompare(b.username):sort==='username-desc'?b.username.localeCompare(a.username):sort==='amount-asc'?a.amount-b.amount:b.amount-a.amount);
+  rows.sort((a,b)=>{
+    if(sort==='username-asc') return a.username.localeCompare(b.username) || a.amount-b.amount;
+    if(sort==='username-desc') return b.username.localeCompare(a.username) || b.amount-a.amount;
+    if(sort==='amount-asc') return a.amount-b.amount;
+    return b.amount-a.amount;
+  });
+
+  const distinctDates=[...new Set(rows.map(r=>r.calendarDate).filter(Boolean))].sort();
   return {
     rows,
     duplicateCount:rows.filter(r=>r.doubleBonus).length,
-    calendarDayRule:true
+    distinctDates,
+    calendarDayRule:true,
+    sourceRule:'To Bank contains SCB A BONUS DEPOSIT HARIAN; blank status accepted; non-Confirmed status excluded'
   };
 }
