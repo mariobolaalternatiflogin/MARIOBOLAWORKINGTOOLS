@@ -1,1 +1,1 @@
-{"name":"working-tools-v1","version":"1.4.0","private":true,"type":"module","scripts":{"test":"node test/parser.test.mjs"}}
+{"name":"working-tools-v1","version":"1.5.0","private":true,"type":"module","scripts":{"test":"node test/parser.test.mjs"}}
