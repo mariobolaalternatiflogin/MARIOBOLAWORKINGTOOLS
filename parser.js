@@ -1,5 +1,6 @@
 export const CONFIG = {
   defaultBonusRate: 0.05,
+  maxBonusAmount: 100000,
   matchingWindowHours: 24, // legacy compatibility only; audit uses calendar dates, not rolling hours
   bonusTarget: 'SCB A BONUS DEPOSIT HARIAN',
   excludedRemarks: [
@@ -229,7 +230,11 @@ function calendarDateKey(value){
   if(!d)return '';
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
 }
-function expectedBonus(deposit, rate){return Math.round(deposit.amount*rate);}
+export function calculateExpectedBonus(depositAmount, rate){
+  const raw=Math.round(Number(depositAmount||0)*Number(rate||0));
+  return Math.min(Math.max(raw,0), CONFIG.maxBonusAmount);
+}
+function expectedBonus(deposit, rate){return calculateExpectedBonus(deposit.amount,rate);}
 function sortByDate(records){
   return [...records].sort((a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0));
 }
