@@ -89,87 +89,95 @@ function browserRowBlocks(text){
 function firstDate(text){
   return clean(text).match(/\b\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?\b/i)?.[0] || '';
 }
+function allAmountTokens(text){
+  return [...clean(text).matchAll(/(?<![\d/])\d{1,3}(?:[.,]\d{3})+(?!\d)/g)].map(m=>m[0]);
+}
 function firstAmountToken(text){
-  // Report amounts use forms such as 500.000, 1,050.000, 1.000.000.
-  return clean(text).match(/(?<![\d/])\d{1,3}(?:[.,]\d{3})+(?!\d)/)?.[0] || '';
+  return allAmountTokens(text)[0] || '';
+}
+function lastAmountTokenBeforeDate(text){
+  const s=clean(text);
+  const dateMatch=s.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?\b/i);
+  const prefix=dateMatch ? s.slice(0,dateMatch.index) : s;
+  const tokens=allAmountTokens(prefix);
+  return tokens.length ? tokens[tokens.length-1] : firstAmountToken(s);
 }
 function browserPlainRowToRaw(block, source){
   const n=clean(block).replace(/\t+/g,'\t');
+  const lines=n.split(/\n+/).map(clean).filter(Boolean);
   const user=n.match(/\bBEB@[^\s\t]+/i)?.[0] || n.match(/\b[A-Za-z0-9_.-]+@[^\s\t]+/i)?.[0] || '';
   const date=firstDate(n);
-  const amount=firstAmountToken(n);
+  // In browser-copy rows the actual Amount is the last monetary-looking token before
+  // the first transaction Date. This avoids mistaking a dotted account number for Amount.
+  const amount=lastAmountTokenBeforeDate(n);
   const payment=n.match(/\b(?:QR\s*Pay|Agent\s+Deposit|Member\s+Deposit)\b/i)?.[0] || '';
   const status=n.match(/\b(?:Confirmed|Deleted|Pending|Processing|Rejected|Cancelled)\b/i)?.[0] || '';
   const remark=CONFIG.excludedRemarks.find(x=>norm(n).includes(x)) || '';
 
-  // Detect the To Bank value from a flattened browser copy. The report normally exposes
-  // From Bank and To Bank as consecutive multi-line cells before the Amount. Because the
-  // From Bank cell comes first, the To Bank section is the later bank block nearest Amount.
-  // This is used only when there are no useful tabs.
-  const detectFlattenedToBank = ()=>{
-    if(!n || source!=='deposit-history') return '';
-    const lines=n.split(/\n+/).map(clean).filter(Boolean);
-    const amountIdx=lines.findIndex(line=>firstAmountToken(line));
-    if(amountIdx<0) return '';
+  // Browser clipboard output can flatten <br>-separated cells into individual lines.
+  // For Deposit Request History the layout is effectively:
+  //   From Bank cell -> To Bank cell -> Amount -> Date -> Payment Method -> Status -> ...
+  // We must NOT assume either bank cell is always exactly 3 lines long. Instead, locate
+  // the first two recognizable bank/destination labels before Amount/Date. The SECOND
+  // recognized bank label is the To Bank value. This is what lets Agent Deposit -> BRI/BCA/
+  // DANA/etc. be classified as MEMBER_DEPOSIT while Agent Deposit -> SCB A BONUS... remains
+  // DAILY_BONUS.
+  const knownBankLabels=[
+    'SCB','DANA','BCA','MANDIRI','BNI','BRI','DANAMON','GOPAY','GO PAY','LINKAJA','OVO','PRABUPAY'
+  ];
+  const bankRegexFor=(name)=>name==='GO PAY'?/^GO\s*PAY$/i:new RegExp('^'+name.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')+'$','i');
+  const isKnownBankLine=(line)=>knownBankLabels.some(name=>bankRegexFor(name).test(norm(line)));
 
-    // In the browser's flattened copy the first visual cell can share the row number +
-    // username line. Strip that prefix, then reconstruct the normal 3-line From Bank cell.
-    // The following 3-line block is therefore the To Bank cell (before Amount).
-    const firstLine=lines[0]||'';
-    const userMatch=firstLine.match(/\bBEB@[^\s\t]+/i) || firstLine.match(/\b[A-Za-z0-9_.-]+@[^\s\t]+/i);
-    let bankLines=[];
-    if(userMatch){
-      const remainder=firstLine.slice((userMatch.index??0)+userMatch[0].length).trim();
-      if(remainder) bankLines.push(remainder);
+  const detectToBank=()=>{
+    if(source!=='deposit-history') return '';
+    const dateMatch=n.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?\b/i);
+    const amountDateBoundary=dateMatch?.index ?? n.length;
+    const preMeta=n.slice(0,amountDateBoundary);
+    const preLines=preMeta.split(/\n+/).map(clean).filter(Boolean);
+
+    // If the row has a normal tab structure, the explicit second column is authoritative.
+    const cells=n.split('\t').map(clean).filter(Boolean);
+    if(cells.length>=4 && user){
+      const userIndex=cells.findIndex(c=>new RegExp('\\b'+user.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')+'\\b','i').test(c));
+      if(userIndex>=0 && cells[userIndex+2]) return cells[userIndex+2];
     }
-    bankLines.push(...lines.slice(1,amountIdx));
 
-    const toSection=bankLines.slice(3);
-    const normalizedTargetNames=CONFIG.memberDepositToBanks.map(x=>norm(x));
-    const findTarget=(section)=>{
-      const candidates=[];
-      for(let i=0;i<section.length;i++){
-        const line=norm(section[i]);
-        for(const name of normalizedTargetNames){
-          const re=name==='GO PAY'?/\bGO\s*PAY\b/:new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
-          if(re.test(line)) candidates.push({i,name});
-        }
+    // Remove the row-number/username prefix from the first visual line.
+    let logicalLines=[...preLines];
+    if(logicalLines.length){
+      const first=logicalLines[0];
+      const um=first.match(/\b(?:BEB@|[A-Za-z0-9_.-]+@)[^\s\t]+/i);
+      if(um){
+        const rem=first.slice((um.index||0)+um[0].length).trim();
+        logicalLines[0]=rem;
+        if(!rem) logicalLines.shift();
       }
-      if(!candidates.length) return '';
-      candidates.sort((a,b)=>a.i-b.i);
-      const last=candidates[candidates.length-1];
-      return last.name==='GO PAY'?'GO PAY':last.name;
-    };
-
-    const structured=findTarget(toSection);
-    if(structured) return structured;
-
-    // Preserve the first line of the reconstructed To Bank cell even when its bank is not
-    // one of the member-destination banks. This lets the classifier correctly distinguish
-    // e.g. From Bank=DANA -> To Bank=SCB (not a member deposit) from DANA -> To Bank=BCA.
-    if(toSection.length) return clean(toSection[0]);
-
-    // Some browser copies flatten an entire row into one physical line. In that case there
-    // are no separate bank lines, so use the last supported destination appearing before the
-    // Amount token. The multiline parser above remains the authoritative path when boundaries
-    // are available.
-    const fallbackTargetNames=CONFIG.memberDepositToBanks.map(x=>norm(x));
-    const fullCandidates=[];
-    const beforeAmountText=amountIdx>=0 ? lines.slice(0, amountIdx+1).join(' ') : n;
-    for(const name of fallbackTargetNames){
-      const re=name==='GO PAY'?/\bGO\s*PAY\b/g:new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g');
-      let m;
-      while((m=re.exec(norm(beforeAmountText)))) fullCandidates.push({index:m.index,name});
-    }
-    if(fullCandidates.length){
-      fullCandidates.sort((a,b)=>a.index-b.index);
-      const last=fullCandidates[fullCandidates.length-1];
-      return last.name==='GO PAY'?'GO PAY':last.name;
     }
 
+    // Normally the second known bank label is the To Bank. This handles variable-length
+    // From/To cells and does not depend on account-name/account-number line counts.
+    const hits=[];
+    logicalLines.forEach((line,i)=>{
+      for(const name of knownBankLabels){
+        if(bankRegexFor(name).test(norm(line))){ hits.push({i,name}); break; }
+      }
+    });
+    if(hits.length>=2){
+      return hits[1].name==='GO PAY'?'GO PAY':hits[1].name;
+    }
+
+    // Strong fallbacks for the two most important patterns.
+    if(norm(n).includes(norm(CONFIG.bonusTarget))) return CONFIG.bonusTarget;
+    const targets=CONFIG.memberDepositToBanks.map(norm);
+    for(let i=logicalLines.length-1;i>=0;i--){
+      const line=norm(logicalLines[i]);
+      const target=targets.find(x=>x==='GO PAY'?line==='GO PAY':line===x);
+      if(target) return target;
+    }
     return '';
   };
-  const flattenedToBank=detectFlattenedToBank();
+
+  const flattenedToBank=detectToBank();
 
   // When clipboard data still contains cell tabs, reconstruct the known report columns.
   const cells=n.split('\t').map(clean);
@@ -198,7 +206,7 @@ function browserPlainRowToRaw(block, source){
     const obj={
       'User Name': user,
       'From Bank': cells[first+1]||'',
-      'To Bank': cells[first+2]||'',
+      'To Bank': cells[first+2]||flattenedToBank,
       'Amount': amount || cells[first+3]||'',
       'Date': date || cells[first+4]||'',
       'Payment Method': cells.find(c=>/^(QR\s*Pay|Agent\s+Deposit|Member\s+Deposit)$/i.test(c))||payment,
@@ -207,15 +215,15 @@ function browserPlainRowToRaw(block, source){
       'Remark': remark,
       'Edited By': ''
     };
-    // The browser often breaks the three-line To Bank cell over physical lines. If the
-    // target text is visible anywhere in the row, force it into To Bank so classification works.
+    // The browser can preserve tabs for some rows but still split the bank cell internally.
+    // Prefer our structural To Bank detection when available.
     if(norm(n).includes(norm(CONFIG.bonusTarget))) obj['To Bank']=`${obj['To Bank']}\n${CONFIG.bonusTarget}`.trim();
     else if(flattenedToBank) obj['To Bank']=flattenedToBank;
     return obj;
   }
 
   // Fully flattened browser text (no useful tabs): parse the fields required by the bonus
-  // engine, including the To Bank classification for Agent Deposit bank-to-bank transfers.
+  // engine, including To Bank classification for Agent Deposit bank-to-bank transfers.
   return {
     'User Name':user,
     'From Bank':'',
