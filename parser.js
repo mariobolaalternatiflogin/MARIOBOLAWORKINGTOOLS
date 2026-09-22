@@ -3,6 +3,7 @@ export const CONFIG = {
   maxBonusAmount: 100000,
   matchingWindowHours: 24, // legacy compatibility only; audit uses calendar dates, not rolling hours
   bonusTarget: 'SCB A BONUS DEPOSIT HARIAN',
+  memberDepositToBanks: ['DANA','BCA','MANDIRI','BNI','BRI','DANAMON','GOPAY','GO PAY','LINKAJA','OVO'],
   excludedRemarks: [
     'SAFETY BET','SB','NO BONUS','TIDAK MAU BONUS','NB','BATAL WD',
     'WD DIKEMBALIKAN KE MEMBER','MEMBER LANJUT MAIN','WD DIKEMBALIKAN MEMBER LANJUT MAIN'
@@ -101,6 +102,75 @@ function browserPlainRowToRaw(block, source){
   const status=n.match(/\b(?:Confirmed|Deleted|Pending|Processing|Rejected|Cancelled)\b/i)?.[0] || '';
   const remark=CONFIG.excludedRemarks.find(x=>norm(n).includes(x)) || '';
 
+  // Detect the To Bank value from a flattened browser copy. The report normally exposes
+  // From Bank and To Bank as consecutive multi-line cells before the Amount. Because the
+  // From Bank cell comes first, the To Bank section is the later bank block nearest Amount.
+  // This is used only when there are no useful tabs.
+  const detectFlattenedToBank = ()=>{
+    if(!n || source!=='deposit-history') return '';
+    const lines=n.split(/\n+/).map(clean).filter(Boolean);
+    const amountIdx=lines.findIndex(line=>firstAmountToken(line));
+    if(amountIdx<0) return '';
+
+    // In the browser's flattened copy the first visual cell can share the row number +
+    // username line. Strip that prefix, then reconstruct the normal 3-line From Bank cell.
+    // The following 3-line block is therefore the To Bank cell (before Amount).
+    const firstLine=lines[0]||'';
+    const userMatch=firstLine.match(/\bBEB@[^\s\t]+/i) || firstLine.match(/\b[A-Za-z0-9_.-]+@[^\s\t]+/i);
+    let bankLines=[];
+    if(userMatch){
+      const remainder=firstLine.slice((userMatch.index??0)+userMatch[0].length).trim();
+      if(remainder) bankLines.push(remainder);
+    }
+    bankLines.push(...lines.slice(1,amountIdx));
+
+    const toSection=bankLines.slice(3);
+    const normalizedTargetNames=CONFIG.memberDepositToBanks.map(x=>norm(x));
+    const findTarget=(section)=>{
+      const candidates=[];
+      for(let i=0;i<section.length;i++){
+        const line=norm(section[i]);
+        for(const name of normalizedTargetNames){
+          const re=name==='GO PAY'?/\bGO\s*PAY\b/:new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
+          if(re.test(line)) candidates.push({i,name});
+        }
+      }
+      if(!candidates.length) return '';
+      candidates.sort((a,b)=>a.i-b.i);
+      const last=candidates[candidates.length-1];
+      return last.name==='GO PAY'?'GO PAY':last.name;
+    };
+
+    const structured=findTarget(toSection);
+    if(structured) return structured;
+
+    // Preserve the first line of the reconstructed To Bank cell even when its bank is not
+    // one of the member-destination banks. This lets the classifier correctly distinguish
+    // e.g. From Bank=DANA -> To Bank=SCB (not a member deposit) from DANA -> To Bank=BCA.
+    if(toSection.length) return clean(toSection[0]);
+
+    // Some browser copies flatten an entire row into one physical line. In that case there
+    // are no separate bank lines, so use the last supported destination appearing before the
+    // Amount token. The multiline parser above remains the authoritative path when boundaries
+    // are available.
+    const fallbackTargetNames=CONFIG.memberDepositToBanks.map(x=>norm(x));
+    const fullCandidates=[];
+    const beforeAmountText=amountIdx>=0 ? lines.slice(0, amountIdx+1).join(' ') : n;
+    for(const name of fallbackTargetNames){
+      const re=name==='GO PAY'?/\bGO\s*PAY\b/g:new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g');
+      let m;
+      while((m=re.exec(norm(beforeAmountText)))) fullCandidates.push({index:m.index,name});
+    }
+    if(fullCandidates.length){
+      fullCandidates.sort((a,b)=>a.index-b.index);
+      const last=fullCandidates[fullCandidates.length-1];
+      return last.name==='GO PAY'?'GO PAY':last.name;
+    }
+
+    return '';
+  };
+  const flattenedToBank=detectFlattenedToBank();
+
   // When clipboard data still contains cell tabs, reconstruct the known report columns.
   const cells=n.split('\t').map(clean);
   const first=cells[0].match(/^\d{1,8}$/) ? 1 : 0;
@@ -140,15 +210,16 @@ function browserPlainRowToRaw(block, source){
     // The browser often breaks the three-line To Bank cell over physical lines. If the
     // target text is visible anywhere in the row, force it into To Bank so classification works.
     if(norm(n).includes(norm(CONFIG.bonusTarget))) obj['To Bank']=`${obj['To Bank']}\n${CONFIG.bonusTarget}`.trim();
+    else if(flattenedToBank) obj['To Bank']=flattenedToBank;
     return obj;
   }
 
-  // Fully flattened browser text (no useful tabs): parse only the fields required by the
-  // bonus engine. Bank/account detail is informational and does not need exact boundaries.
+  // Fully flattened browser text (no useful tabs): parse the fields required by the bonus
+  // engine, including the To Bank classification for Agent Deposit bank-to-bank transfers.
   return {
     'User Name':user,
     'From Bank':'',
-    'To Bank': norm(n).includes(norm(CONFIG.bonusTarget)) ? CONFIG.bonusTarget : '',
+    'To Bank': norm(n).includes(norm(CONFIG.bonusTarget)) ? CONFIG.bonusTarget : flattenedToBank,
     'Amount':amount,
     'Reference':'',
     'RRN':'',
@@ -187,7 +258,11 @@ export function classifyTransaction(r){
   const pm=norm(r.paymentMethod), from=norm(r.fromBank), to=norm(r.toBank);
   if(to.includes(norm(CONFIG.bonusTarget)) && pm==='AGENT DEPOSIT') return 'DAILY_BONUS';
   if(pm==='MEMBER DEPOSIT') return 'MEMBER_DEPOSIT';
-  // User-requested fallback, corrected to a safe interpretation: Agent Deposit + either bank field contains Member Deposit.
+  // Agent Deposit to one of the supported member-facing bank/e-wallet destinations is
+  // also a MEMBER_DEPOSIT. This is intentionally based on To Bank, not From Bank.
+  if(pm==='AGENT DEPOSIT' && CONFIG.memberDepositToBanks.some(name=>to.includes(norm(name)))) return 'MEMBER_DEPOSIT';
+  // Legacy/fallback rule retained for reports that literally expose "Member Deposit" in
+  // one of the bank fields.
   if(pm==='AGENT DEPOSIT' && (from.includes('MEMBER DEPOSIT') || to.includes('MEMBER DEPOSIT'))) return 'MEMBER_DEPOSIT';
   return pm==='AGENT DEPOSIT'?'AGENT_DEPOSIT':pm==='MEMBER DEPOSIT'?'MEMBER_DEPOSIT':'OTHER';
 }
