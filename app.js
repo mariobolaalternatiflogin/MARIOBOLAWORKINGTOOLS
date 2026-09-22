@@ -13,33 +13,105 @@ const EXAMPLE_HISTORY=`| ** ** | **User Name** | **From Bank** | **To Bank** | *
 |3|BEB\\@msptra55|GO PAY<br>Muhamadsaputra<br>08**98013***|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**3.000**|22/09/2026 12:03:53 AM|Agent Deposit|Confirmed|22/09/2026 12:03:58 AM||beb\\@mario08|
 |4|BEB\\@Wakleng123|BNI<br>Sufriyadi<br>1888017846|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**15.000**|22/09/2026 12:04:12 AM|Agent Deposit|Confirmed|22/09/2026 12:04:24 AM||beb\\@mario08|
 |5|BEB\\@bily12|DANA<br>pipit<br>08**15990***|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**2.500**|22/09/2026 12:04:21 AM|Agent Deposit|Confirmed|22/09/2026 12:04:28 AM||beb\\@mario08|`;
-const $=s=>document.querySelector(s); const money=n=>new Intl.NumberFormat('id-ID').format(n||0); const statusClass=s=>s==='SESUAI'?'good':s==='MISTAKE'?'warn':(s.includes('BELUM')||s.includes('BLOKIR'))?'bad':'muted';
-let checkRows=[], inputRows=[];
+const $=s=>document.querySelector(s);
+const money=n=>new Intl.NumberFormat('id-ID').format(n||0);
+const statusClass=s=>s==='SESUAI'?'good':s==='MISTAKE'?'warn':(s.includes('BELUM')||s.includes('BLOKIR'))?'bad':'muted';
+const HIDDEN_CHECK_KEY='working-tools-bonus.hiddenCheckUsernames.v1';
+const HIDDEN_INPUT_KEY='working-tools-bonus.hiddenInputUsernames.v1';
+let checkRows=[], inputRows=[], checkFilter='pending';
 function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderCheck(){const tb=$('#checkTable tbody'); const visible=checkRows.filter(r=>!r.hidden); const hidden=checkRows.filter(r=>r.hidden); $('#checkSummary').textContent=`${visible.length} tampil • ${hidden.length} disembunyikan • ${checkRows.suppressedDeposits||0} deposit berulang disaring (tanggal yang sama) • ${checkRows.filter(r=>r.doubleBonus).length} double bonus • ${checkRows.filter(r=>r.status==='MISTAKE').length} MISTAKE`;
- tb.innerHTML=visible.length?visible.map(r=>`<tr><td><b>${escapeHtml(r.username)}</b></td><td>${money(r.depositAmount)}</td><td>${money(r.expectedBonus)}</td><td>${money(r.givenBonus)}</td><td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td><td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td><td>${escapeHtml(r.remarkStatus)}</td><td>${escapeHtml(r.depositDate)}</td><td><button class="hide-btn" data-hide-check="${checkRows.indexOf(r)}">Sembunyikan</button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">Tidak ada hasil yang tampil.</td></tr>';
- $('#hiddenCheck').innerHTML=hidden.length?`<div class="hidden-title">Data disembunyikan (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>Deposit ${money(r.depositAmount)} • ${escapeHtml(r.status)}</span><button class="hide-btn" data-show-check="${checkRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';}
-function renderInput(){const tb=$('#inputTable tbody'); const visible=inputRows.filter(r=>!r.hidden); const hidden=inputRows.filter(r=>r.hidden); $('#inputSummary').textContent=`${visible.length} baris tampil • ${hidden.length} disembunyikan • ${inputRows.filter(r=>r.doubleBonus).length} baris berada pada username yang muncul lebih dari sekali`;
- tb.innerHTML=visible.length?visible.map(r=>`<tr><td><b>${escapeHtml(r.username)}</b></td><td>${money(r.amount)}</td><td>${escapeHtml(r.date)}</td><td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td><td><button class="hide-btn" data-hide-input="${inputRows.indexOf(r)}">Sembunyikan</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Tidak ada data yang tampil.</td></tr>';
- $('#hiddenInput').innerHTML=hidden.length?`<div class="hidden-title">Data disembunyikan (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>${money(r.amount)} • ${escapeHtml(r.date)}</span><button class="hide-btn" data-show-input="${inputRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';}
+function loadHidden(key){try{const raw=localStorage.getItem(key);const list=JSON.parse(raw||'[]');return new Set(Array.isArray(list)?list.map(String):[]);}catch{return new Set();}}
+function saveHidden(key,set){try{localStorage.setItem(key,JSON.stringify([...set]));}catch{}}
+function getHiddenSet(key){return loadHidden(key);}
+function isBlacklisted(r){return /SAFETY BET|(^|[^A-Z])SB([^A-Z]|$)|NO BONUS|TIDAK MAU BONUS|(^|[^A-Z])NB([^A-Z]|$)|BATAL WD|WD DIKEMBALIKAN KE MEMBER|MEMBER LANJUT MAIN|WD DIKEMBALIKAN MEMBER LANJUT MAIN/i.test(String(r?.remarkStatus||''));}
+function matchesCheckFilter(r){
+  if(checkFilter==='all') return true;
+  if(checkFilter==='pending') return /BELUM DIBERIKAN/i.test(String(r.status||'')) || isBlacklisted(r);
+  if(checkFilter==='mistake') return r.status==='MISTAKE';
+  if(checkFilter==='double') return !!r.doubleBonus;
+  return true;
+}
+function rowHtml(r,index){
+  const black=isBlacklisted(r);
+  const mistakeDouble=r.status==='MISTAKE' || r.doubleBonus;
+  return `<tr class="${black?'blacklist-row ':''}${mistakeDouble?'attention-row':''}" title="${black?'BLACKLIST: jangan berikan bonus untuk member ini.':''}">
+    <td class="username-cell"><b>${escapeHtml(r.username)}</b></td>
+    <td>${money(r.depositAmount)}</td>
+    <td class="bonus-expected-cell"><span class="bonus-expected">${money(r.expectedBonus)}</span></td>
+    <td class="bonus-given-cell"><span class="bonus-given">${money(r.givenBonus)}</span></td>
+    <td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td>
+    <td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td>
+    <td>${black?'<span class="blacklist-badge">BLACKLIST</span> ':''}${escapeHtml(r.remarkStatus)}</td>
+    <td>${escapeHtml(r.depositDate)}</td>
+    <td><button class="hide-btn" data-hide-check="${index}">Sembunyikan</button></td>
+  </tr>`;
+}
+function renderCheck(){
+  const tb=$('#checkTable tbody');
+  const hiddenNames=getHiddenSet(HIDDEN_CHECK_KEY);
+  const currentRows=checkRows;
+  const visible=currentRows.filter(r=>!hiddenNames.has(String(r.username))).filter(matchesCheckFilter);
+  const hidden=currentRows.filter(r=>hiddenNames.has(String(r.username)));
+  const pending=currentRows.filter(r=>/BELUM DIBERIKAN/i.test(String(r.status||''))).length;
+  const mistakes=currentRows.filter(r=>r.status==='MISTAKE').length;
+  const doubles=currentRows.filter(r=>r.doubleBonus).length;
+  $('#checkSummary').innerHTML=`<span>${visible.length} tampil • ${hidden.length} disembunyikan</span> <span class="summary-counts">| Belum ${pending} • Mistake ${mistakes} • Double ${doubles} • Disaring ${currentRows.suppressedDeposits||0} deposit berulang (tanggal sama)</span>`;
+  tb.innerHTML=visible.length?visible.map(r=>rowHtml(r,currentRows.indexOf(r))).join(''):'<tr><td colspan="9" class="empty">Tidak ada hasil pada filter yang dipilih.</td></tr>';
+  $('#hiddenCheck').innerHTML=hidden.length?`<div class="hidden-title">Username yang disembunyikan — tetap tersembunyi saat data baru diproses (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>Deposit ${money(r.depositAmount)} • ${escapeHtml(r.status)}</span><button class="hide-btn" data-show-check="${currentRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';
+}
+function renderInput(){
+  const tb=$('#inputTable tbody');
+  const hiddenNames=getHiddenSet(HIDDEN_INPUT_KEY);
+  const currentRows=inputRows;
+  const visible=currentRows.filter(r=>!hiddenNames.has(String(r.username)));
+  const hidden=currentRows.filter(r=>hiddenNames.has(String(r.username)));
+  $('#inputSummary').textContent=`${visible.length} baris tampil • ${hidden.length} disembunyikan • ${currentRows.filter(r=>r.doubleBonus).length} baris berada pada username yang muncul lebih dari sekali`;
+  tb.innerHTML=visible.length?visible.map(r=>`<tr><td class="username-cell"><b>${escapeHtml(r.username)}</b></td><td class="bonus-expected-cell"><span class="bonus-expected">${money(r.amount)}</span></td><td>${escapeHtml(r.date)}</td><td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td><td><button class="hide-btn" data-hide-input="${currentRows.indexOf(r)}">Sembunyikan</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Tidak ada data yang tampil.</td></tr>';
+  $('#hiddenInput').innerHTML=hidden.length?`<div class="hidden-title">Username yang disembunyikan — tetap tersembunyi saat data baru diproses (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>${money(r.amount)} • ${escapeHtml(r.date)}</span><button class="hide-btn" data-show-input="${currentRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';
+}
+function updateFilterButtons(){document.querySelectorAll('[data-check-filter]').forEach(b=>b.classList.toggle('active',b.dataset.checkFilter===checkFilter));}
 $('#processCheck').onclick=()=>{
   const qr=$('#qrText').value.trim(), h=$('#historyText').value.trim();
   if(!qr||!h){$('#checkSummary').textContent='Dua sumber wajib diisi.';return;}
   const qrParsed=parseReport(qr,'qrpay'), historyParsed=parseReport(h,'deposit-history');
-  checkRows=auditBonuses(qr,h,{rate:Number($('#rate').value)/100});
+  const rows=auditBonuses(qr,h,{rate:Number($('#rate').value)/100});
+  const hiddenNames=getHiddenSet(HIDDEN_CHECK_KEY);
+  rows.forEach(r=>{r.hidden=hiddenNames.has(String(r.username));});
+  checkRows=rows;
   renderCheck();
-  $('#checkSummary').textContent=`QRPay terbaca ${qrParsed.length} transaksi • History terbaca ${historyParsed.length} transaksi • ${checkRows.length} periode bonus tampil • ${checkRows.suppressedDeposits||0} deposit berulang disaring (tanggal yang sama) • ${checkRows.filter(r=>r.doubleBonus).length} double bonus • ${checkRows.filter(r=>r.status==='MISTAKE').length} MISTAKE`;
+  $('#checkSummary').innerHTML=`<span>QRPay terbaca ${qrParsed.length} transaksi • History terbaca ${historyParsed.length} transaksi • ${checkRows.length} periode bonus</span> <span class="summary-counts">| Filter: <b>${$('#checkFilterLabel').textContent}</b></span>`;
+  setTimeout(renderCheck,0);
 };
-$('#clearCheck').onclick=()=>{$('#qrText').value='';$('#historyText').value='';checkRows=[];renderCheck();};
+$('#clearCheck').onclick=()=>{
+  $('#qrText').value='';$('#historyText').value='';checkRows=[];renderCheck();
+  $('#checkSummary').textContent='Data hasil dibersihkan. Username yang sudah disembunyikan tetap tersimpan dan akan tetap tersembunyi pada data berikutnya.';
+};
 $('#processInput').onclick=()=>{
   const h=$('#inputHistory').value.trim();
   if(!h){$('#inputSummary').textContent='Data Deposit Request History wajib diisi.';return;}
   const parsed=parseReport(h,'deposit-history');
-  inputRows=processDailyBonus(h,{sort:$('#sort').value}).rows;
+  const rows=processDailyBonus(h,{sort:$('#sort').value}).rows;
+  const hiddenNames=getHiddenSet(HIDDEN_INPUT_KEY);
+  rows.forEach(r=>{r.hidden=hiddenNames.has(String(r.username));});
+  inputRows=rows;
   renderInput();
   $('#inputSummary').textContent=`History terbaca ${parsed.length} transaksi • ${inputRows.length} bonus harian Confirmed tampil`;
 };
-$('#copyInput').onclick=async()=>{const txt=inputRows.filter(r=>!r.hidden).map(r=>`${r.username}\t${r.amount}`).join('\n'); if(!txt)return; await navigator.clipboard.writeText(txt);$('#inputSummary').textContent='Hasil 2 kolom berhasil disalin ke clipboard.';};
-document.addEventListener('click',e=>{const b=e.target.closest('[data-hide-check]');if(b){const row=checkRows[Number(b.dataset.hideCheck)];if(row)row.hidden=true;renderCheck();} const bs=e.target.closest('[data-show-check]');if(bs){const row=checkRows[Number(bs.dataset.showCheck)];if(row)row.hidden=false;renderCheck();} const c=e.target.closest('[data-hide-input]');if(c){const row=inputRows[Number(c.dataset.hideInput)];if(row)row.hidden=true;renderInput();} const cs=e.target.closest('[data-show-input]');if(cs){const row=inputRows[Number(cs.dataset.showInput)];if(row)row.hidden=false;renderInput();} const ex=e.target.closest('[data-example]');if(ex){const type=ex.dataset.example;if(type==='qr')$('#qrText').value=EXAMPLE_QR;else {$('#historyText').value=EXAMPLE_HISTORY;$('#inputHistory').value=EXAMPLE_HISTORY;}}});
+$('#copyInput').onclick=async()=>{const txt=inputRows.filter(r=>!getHiddenSet(HIDDEN_INPUT_KEY).has(String(r.username))).map(r=>`${r.username}\t${r.amount}`).join('\n'); if(!txt)return; await navigator.clipboard.writeText(txt);$('#inputSummary').textContent='Hasil 2 kolom berhasil disalin ke clipboard.';};
+document.addEventListener('click',e=>{
+  const filter=e.target.closest('[data-check-filter]');
+  if(filter){checkFilter=filter.dataset.checkFilter;$('#checkFilterLabel').textContent=filter.textContent.trim();updateFilterButtons();renderCheck();return;}
+  const b=e.target.closest('[data-hide-check]');
+  if(b){const row=checkRows[Number(b.dataset.hideCheck)];if(row){const s=getHiddenSet(HIDDEN_CHECK_KEY);s.add(String(row.username));saveHidden(HIDDEN_CHECK_KEY,s);row.hidden=true;}renderCheck();}
+  const bs=e.target.closest('[data-show-check]');
+  if(bs){const row=checkRows[Number(bs.dataset.showCheck)];if(row){const s=getHiddenSet(HIDDEN_CHECK_KEY);s.delete(String(row.username));saveHidden(HIDDEN_CHECK_KEY,s);row.hidden=false;}renderCheck();}
+  const c=e.target.closest('[data-hide-input]');
+  if(c){const row=inputRows[Number(c.dataset.hideInput)];if(row){const s=getHiddenSet(HIDDEN_INPUT_KEY);s.add(String(row.username));saveHidden(HIDDEN_INPUT_KEY,s);row.hidden=true;}renderInput();}
+  const cs=e.target.closest('[data-show-input]');
+  if(cs){const row=inputRows[Number(cs.dataset.showInput)];if(row){const s=getHiddenSet(HIDDEN_INPUT_KEY);s.delete(String(row.username));saveHidden(HIDDEN_INPUT_KEY,s);row.hidden=false;}renderInput();}
+  const ex=e.target.closest('[data-example]');
+  if(ex){const type=ex.dataset.example;if(type==='qr')$('#qrText').value=EXAMPLE_QR;else{$('#historyText').value=EXAMPLE_HISTORY;$('#inputHistory').value=EXAMPLE_HISTORY;}}
+});
 document.querySelectorAll('.nav-item').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#tab-'+btn.dataset.tab).classList.add('active');});
 function tick(){const d=new Date();$('#clock').textContent=d.toLocaleTimeString('id-ID',{hour12:false})+' WIB';}tick();setInterval(tick,1000);
+updateFilterButtons();
