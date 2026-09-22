@@ -22,9 +22,23 @@ function renderCheck(){const tb=$('#checkTable tbody'); const visible=checkRows.
 function renderInput(){const tb=$('#inputTable tbody'); const visible=inputRows.filter(r=>!r.hidden); const hidden=inputRows.filter(r=>r.hidden); $('#inputSummary').textContent=`${visible.length} baris tampil • ${hidden.length} disembunyikan • ${inputRows.filter(r=>r.doubleBonus).length} baris berada pada username yang muncul lebih dari sekali`;
  tb.innerHTML=visible.length?visible.map(r=>`<tr><td><b>${escapeHtml(r.username)}</b></td><td>${money(r.amount)}</td><td>${escapeHtml(r.date)}</td><td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td><td><button class="hide-btn" data-hide-input="${inputRows.indexOf(r)}">Sembunyikan</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Tidak ada data yang tampil.</td></tr>';
  $('#hiddenInput').innerHTML=hidden.length?`<div class="hidden-title">Data disembunyikan (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>${money(r.amount)} • ${escapeHtml(r.date)}</span><button class="hide-btn" data-show-input="${inputRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';}
-$('#processCheck').onclick=()=>{const qr=$('#qrText').value.trim(), h=$('#historyText').value.trim(); if(!qr||!h){$('#checkSummary').textContent='Dua sumber wajib diisi.';return;} checkRows=auditBonuses(qr,h,{rate:Number($('#rate').value)/100,windowHours:Number($('#window').value)});renderCheck();};
+$('#processCheck').onclick=()=>{
+  const qr=$('#qrText').value.trim(), h=$('#historyText').value.trim();
+  if(!qr||!h){$('#checkSummary').textContent='Dua sumber wajib diisi.';return;}
+  const qrParsed=parseReport(qr,'qrpay'), historyParsed=parseReport(h,'deposit-history');
+  checkRows=auditBonuses(qr,h,{rate:Number($('#rate').value)/100,windowHours:Number($('#window').value)});
+  renderCheck();
+  $('#checkSummary').textContent=`QRPay terbaca ${qrParsed.length} transaksi • History terbaca ${historyParsed.length} transaksi • ${checkRows.length} username memiliki deposit terbaru untuk dicek • ${checkRows.filter(r=>r.doubleBonus).length} terdeteksi double bonus`;
+};
 $('#clearCheck').onclick=()=>{$('#qrText').value='';$('#historyText').value='';checkRows=[];renderCheck();};
-$('#processInput').onclick=()=>{const h=$('#inputHistory').value.trim(); if(!h){$('#inputSummary').textContent='Data Deposit Request History wajib diisi.';return;} inputRows=processDailyBonus(h,{sort:$('#sort').value}).rows;renderInput();};
+$('#processInput').onclick=()=>{
+  const h=$('#inputHistory').value.trim();
+  if(!h){$('#inputSummary').textContent='Data Deposit Request History wajib diisi.';return;}
+  const parsed=parseReport(h,'deposit-history');
+  inputRows=processDailyBonus(h,{sort:$('#sort').value}).rows;
+  renderInput();
+  $('#inputSummary').textContent=`History terbaca ${parsed.length} transaksi • ${inputRows.length} bonus harian Confirmed tampil`;
+};
 $('#copyInput').onclick=async()=>{const txt=inputRows.filter(r=>!r.hidden).map(r=>`${r.username}\t${r.amount}`).join('\n'); if(!txt)return; await navigator.clipboard.writeText(txt);$('#inputSummary').textContent='Hasil 2 kolom berhasil disalin ke clipboard.';};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-hide-check]');if(b){const row=checkRows[Number(b.dataset.hideCheck)];if(row)row.hidden=true;renderCheck();} const bs=e.target.closest('[data-show-check]');if(bs){const row=checkRows[Number(bs.dataset.showCheck)];if(row)row.hidden=false;renderCheck();} const c=e.target.closest('[data-hide-input]');if(c){const row=inputRows[Number(c.dataset.hideInput)];if(row)row.hidden=true;renderInput();} const cs=e.target.closest('[data-show-input]');if(cs){const row=inputRows[Number(cs.dataset.showInput)];if(row)row.hidden=false;renderInput();} const ex=e.target.closest('[data-example]');if(ex){const type=ex.dataset.example;if(type==='qr')$('#qrText').value=EXAMPLE_QR;else {$('#historyText').value=EXAMPLE_HISTORY;$('#inputHistory').value=EXAMPLE_HISTORY;}}});
 document.querySelectorAll('.nav-item').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#tab-'+btn.dataset.tab).classList.add('active');});
