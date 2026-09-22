@@ -13,10 +13,10 @@ const EXAMPLE_HISTORY=`| ** ** | **User Name** | **From Bank** | **To Bank** | *
 |3|BEB\\@msptra55|GO PAY<br>Muhamadsaputra<br>08**98013***|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**3.000**|22/09/2026 12:03:53 AM|Agent Deposit|Confirmed|22/09/2026 12:03:58 AM||beb\\@mario08|
 |4|BEB\\@Wakleng123|BNI<br>Sufriyadi<br>1888017846|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**15.000**|22/09/2026 12:04:12 AM|Agent Deposit|Confirmed|22/09/2026 12:04:24 AM||beb\\@mario08|
 |5|BEB\\@bily12|DANA<br>pipit<br>08**15990***|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**2.500**|22/09/2026 12:04:21 AM|Agent Deposit|Confirmed|22/09/2026 12:04:28 AM||beb\\@mario08|`;
-const $=s=>document.querySelector(s); const money=n=>new Intl.NumberFormat('id-ID').format(n||0); const statusClass=s=>s==='SESUAI'?'good':s==='LEBIH BONUS'?'warn':(s==='KEKURANGAN BONUS'||s.includes('BELUM')||s.includes('BLOKIR'))?'bad':'muted';
+const $=s=>document.querySelector(s); const money=n=>new Intl.NumberFormat('id-ID').format(n||0); const statusClass=s=>s==='SESUAI'?'good':s==='MISTAKE'?'warn':(s.includes('BELUM')||s.includes('BLOKIR'))?'bad':'muted';
 let checkRows=[], inputRows=[];
 function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderCheck(){const tb=$('#checkTable tbody'); const visible=checkRows.filter(r=>!r.hidden); const hidden=checkRows.filter(r=>r.hidden); $('#checkSummary').textContent=`${visible.length} tampil • ${hidden.length} disembunyikan • ${checkRows.filter(r=>r.doubleBonus).length} terdeteksi double bonus`;
+function renderCheck(){const tb=$('#checkTable tbody'); const visible=checkRows.filter(r=>!r.hidden); const hidden=checkRows.filter(r=>r.hidden); $('#checkSummary').textContent=`${visible.length} tampil • ${hidden.length} disembunyikan • ${checkRows.suppressedDeposits||0} deposit berulang disaring (tanggal yang sama) • ${checkRows.filter(r=>r.doubleBonus).length} double bonus • ${checkRows.filter(r=>r.status==='MISTAKE').length} MISTAKE`;
  tb.innerHTML=visible.length?visible.map(r=>`<tr><td><b>${escapeHtml(r.username)}</b></td><td>${money(r.depositAmount)}</td><td>${money(r.expectedBonus)}</td><td>${money(r.givenBonus)}</td><td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td><td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td><td>${escapeHtml(r.remarkStatus)}</td><td>${escapeHtml(r.depositDate)}</td><td><button class="hide-btn" data-hide-check="${checkRows.indexOf(r)}">Sembunyikan</button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">Tidak ada hasil yang tampil.</td></tr>';
  $('#hiddenCheck').innerHTML=hidden.length?`<div class="hidden-title">Data disembunyikan (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>Deposit ${money(r.depositAmount)} • ${escapeHtml(r.status)}</span><button class="hide-btn" data-show-check="${checkRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';}
 function renderInput(){const tb=$('#inputTable tbody'); const visible=inputRows.filter(r=>!r.hidden); const hidden=inputRows.filter(r=>r.hidden); $('#inputSummary').textContent=`${visible.length} baris tampil • ${hidden.length} disembunyikan • ${inputRows.filter(r=>r.doubleBonus).length} baris berada pada username yang muncul lebih dari sekali`;
@@ -26,9 +26,9 @@ $('#processCheck').onclick=()=>{
   const qr=$('#qrText').value.trim(), h=$('#historyText').value.trim();
   if(!qr||!h){$('#checkSummary').textContent='Dua sumber wajib diisi.';return;}
   const qrParsed=parseReport(qr,'qrpay'), historyParsed=parseReport(h,'deposit-history');
-  checkRows=auditBonuses(qr,h,{rate:Number($('#rate').value)/100,windowHours:Number($('#window').value)});
+  checkRows=auditBonuses(qr,h,{rate:Number($('#rate').value)/100});
   renderCheck();
-  $('#checkSummary').textContent=`QRPay terbaca ${qrParsed.length} transaksi • History terbaca ${historyParsed.length} transaksi • ${checkRows.length} username memiliki deposit terbaru untuk dicek • ${checkRows.filter(r=>r.doubleBonus).length} terdeteksi double bonus`;
+  $('#checkSummary').textContent=`QRPay terbaca ${qrParsed.length} transaksi • History terbaca ${historyParsed.length} transaksi • ${checkRows.length} periode bonus tampil • ${checkRows.suppressedDeposits||0} deposit berulang disaring (tanggal yang sama) • ${checkRows.filter(r=>r.doubleBonus).length} double bonus • ${checkRows.filter(r=>r.status==='MISTAKE').length} MISTAKE`;
 };
 $('#clearCheck').onclick=()=>{$('#qrText').value='';$('#historyText').value='';checkRows=[];renderCheck();};
 $('#processInput').onclick=()=>{
