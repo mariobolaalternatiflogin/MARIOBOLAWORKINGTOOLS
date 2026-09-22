@@ -137,4 +137,30 @@ console.log('INPUT BONUS CALENDAR-DAY TEST PASSED');
 // Remark parser remains intact.
 const parsedRemark=parseReport(`1 BEB@Y BCA SCB SCB A BONUS DEPOSIT HARIAN 01 25.000 22/09/2026 02:03:00 AM Agent Deposit Confirmed NO BONUS`);
 assert.equal(parsedRemark[0].remarkStatus,'NO BONUS');
-console.log('ALL V1.3 TESTS PASSED');
+
+// Maximum bonus cap: expected bonus is never above Rp100,000 per username per calendar date.
+const qrCap5=`1 BEB@Cap5 BCA PrabuPay 3.000.000 22/09/2026 05:00:00 AM QR Pay Confirmed`;
+const histCap5=`1 BEB@Cap5 BCA SCB SCB A BONUS DEPOSIT HARIAN 01 100.000 22/09/2026 05:05:00 AM Agent Deposit Confirmed 22/09/2026 05:05:10 AM beb@mario08`;
+const aCap5=auditBonuses(qrCap5,histCap5,{rate:0.05});
+assert.equal(aCap5[0].depositAmount,3000000);
+assert.equal(aCap5[0].expectedBonus,100000); // 5% = 150k, but capped at 100k
+assert.equal(aCap5[0].givenBonus,100000);
+assert.equal(aCap5[0].status,'SESUAI');
+
+const qrCap10=`1 BEB@Cap10 BCA PrabuPay 2.000.000 22/09/2026 06:00:00 AM QR Pay Confirmed`;
+const histCap10=`1 BEB@Cap10 BCA SCB SCB A BONUS DEPOSIT HARIAN 01 100.000 22/09/2026 06:05:00 AM Agent Deposit Confirmed 22/09/2026 06:05:10 AM beb@mario08`;
+const aCap10=auditBonuses(qrCap10,histCap10,{rate:0.10});
+assert.equal(aCap10[0].depositAmount,2000000);
+assert.equal(aCap10[0].expectedBonus,100000); // 10% = 200k, but capped at 100k
+assert.equal(aCap10[0].givenBonus,100000);
+assert.equal(aCap10[0].status,'SESUAI');
+
+const overCap=`1 BEB@CapOver BCA PrabuPay 3.000.000 22/09/2026 07:00:00 AM QR Pay Confirmed`;
+const overCapHist=`1 BEB@CapOver BCA SCB SCB A BONUS DEPOSIT HARIAN 01 101.000 22/09/2026 07:05:00 AM Agent Deposit Confirmed 22/09/2026 07:05:10 AM beb@mario08`;
+const aOverCap=auditBonuses(overCap,overCapHist,{rate:0.05});
+assert.equal(aOverCap[0].expectedBonus,100000);
+assert.equal(aOverCap[0].givenBonus,101000);
+assert.equal(aOverCap[0].status,'MISTAKE');
+console.log('MAXIMUM BONUS CAP TESTS PASSED');
+
+console.log('ALL V1.4 TESTS PASSED');
