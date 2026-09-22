@@ -70,7 +70,7 @@ function parseLoose(text){
   const rows=parseTSV(text); if(rows.length)return rows;
   return parseMarkdownTable(text);
 }
-export function parseReport(text, source='deposit-history'){
+export function parseReport(text, source='Deposit Request History'){
   const rows=parseLoose(text);
   return rows.map((r,i)=>normalizeRow(r,i,source)).filter(Boolean);
 }
@@ -112,7 +112,7 @@ export function getDailyBonusRecords(records){
   return records.filter(r=>r.transactionType==='DAILY_BONUS' && isConfirmed(r));
 }
 export function getDepositRecords(records, source='history'){
-  if(source==='qrpay') return records.filter(r=>isConfirmed(r) && r.amount>0);
+  if(source==='Deposit Request History QRPay') return records.filter(r=>isConfirmed(r) && r.amount>0);
   return records.filter(r=>r.transactionType==='MEMBER_DEPOSIT' && isConfirmed(r));
 }
 export function latestByUsername(records){
@@ -129,9 +129,9 @@ function expectedBonus(deposit, rate){return Math.round(deposit.amount*rate);}
 export function auditBonuses(qrText, historyText, opts={}){
   const rate=Number.isFinite(Number(opts.rate))?Number(opts.rate):CONFIG.defaultBonusRate;
   const windowHours=Number.isFinite(Number(opts.windowHours))?Number(opts.windowHours):CONFIG.matchingWindowHours;
-  const qr=parseReport(qrText,'qrpay');
-  const hist=parseReport(historyText,'deposit-history');
-  const deposits=latestByUsername(getDepositRecords(qr,'qrpay'));
+  const qr=parseReport(qrText,'Deposit Request History QRPay');
+  const hist=parseReport(historyText,'Deposit Request History');
+  const deposits=latestByUsername(getDepositRecords(qr,'Deposit Request History QRPay'));
   const bonuses=getDailyBonusRecords(hist);
   const allByUser=new Map(); bonuses.forEach(b=>{if(!allByUser.has(b.username))allByUser.set(b.username,[]);allByUser.get(b.username).push(b);});
   return deposits.map(dep=>{
@@ -154,7 +154,7 @@ export function auditBonuses(qrText, historyText, opts={}){
   });
 }
 export function processDailyBonus(historyText, opts={}){
-  const records=parseReport(historyText,'deposit-history');
+  const records=parseReport(historyText,'Deposit Request History');
   const bonus=getDailyBonusRecords(records);
   const excluded=new Set((opts.excludedRemarks||CONFIG.excludedRemarks).map(norm));
   const filtered=bonus.filter(r=>!excluded.has(norm(r.remarkStatus)) && r.remarkStatus==='NORMAL');
