@@ -123,5 +123,20 @@ document.addEventListener('click',e=>{
   if(ex){const type=ex.dataset.example;if(type==='qr')$('#qrText').value=EXAMPLE_QR;else{$('#historyText').value=EXAMPLE_HISTORY;$('#inputHistory').value=EXAMPLE_HISTORY;}}
 });
 document.querySelectorAll('.nav-item').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#tab-'+btn.dataset.tab).classList.add('active');});
-function tick(){const d=new Date();$('#clock').textContent=d.toLocaleTimeString('id-ID',{hour12:false})+' WIB';}tick();setInterval(tick,1000);
+function tick() {
+  const now = new Date();
+
+  const jakartaTime = new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).format(now);
+
+  $('#clock').textContent = jakartaTime + ' WIB';
+}
+
+tick();
+setInterval(tick, 1000);
 updateFilterButtons();
