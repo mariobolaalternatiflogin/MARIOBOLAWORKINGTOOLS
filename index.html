@@ -58,52 +58,6 @@ table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{p
 @media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:14px 12px 35px}nav{top:78px}.header-chip{display:none}.brand-copy h1{font-size:19px}}
 @media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.stats .stat{min-width:0}.toolbar input{min-width:160px;width:100%}}
 </style>
-
-<style id="monochrome-theme">
-/* MARIOBOLA TOOLS — Minimal Monochrome Theme
-   Semua elemen UI menggunakan hitam/putih/abu-abu.
-   Asset logo dan favicon sengaja TIDAK diberi grayscale filter.
-*/
-:root{
-  --bg:#000;--panel:#111;--panel2:#1a1a1a;--line:#333;--line2:#444;
-  --text:#fff;--muted:#aaa;--accent:#fff;--accent2:#ddd;
-  --green:#fff;--red:#fff;--orange:#fff;--blue:#fff;
-}
-body{background:#000;color:#fff}
-body:before{background:linear-gradient(135deg,#000 0%,#111 50%,#000 100%)}
-body:after{opacity:.10;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)}
-header{background:rgba(0,0,0,.96);border-bottom:1px solid #333;box-shadow:0 10px 40px rgba(0,0,0,.7)}
-.brand-logo{filter:drop-shadow(0 0 12px rgba(0,0,0,.55))}
-.brand-mark{background:#fff;color:#000;box-shadow:0 0 22px rgba(255,255,255,.12)}
-.sub,.hint,.muted,.source-count,.report-member label,.stat span{color:#aaa}
-.header-chip{border-color:#333;background:#111;color:#ddd}
-nav{background:rgba(8,8,8,.97);border-bottom:1px solid #2b2b2b}
-nav button{background:#111;color:#ddd;border-color:#333}
-nav button:hover{border-color:#666}
-nav button.active{background:#fff;border-color:#fff;color:#000;box-shadow:0 8px 24px rgba(255,255,255,.10)}
-.card{background:linear-gradient(145deg,#151515,#0b0b0b);border-color:#2b2b2b;box-shadow:0 20px 65px rgba(0,0,0,.55),inset 0 1px rgba(255,255,255,.04)}
-textarea,input,select,.copy-area{background:#080808;color:#fff;border-color:#333}
-textarea:focus,input:focus,select:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.08)}
-button.primary,.btn{background:#fff;color:#000;box-shadow:0 7px 22px rgba(255,255,255,.08)}
-.btn2,.export{background:#151515;color:#fff;border-color:#333}
-.btn2:hover,.export:hover{border-color:#666}
-.stats .stat{background:linear-gradient(145deg,#171717,#0b0b0b);border-color:#2b2b2b}
-.table-wrap{background:#080808;border-color:#333}
-th{background:#1c1c1c;color:#fff}
-th,td{border-bottom-color:#242424}
-.ok,.danger,.warn,.pending{background:#161616}
-.badge,.b-ok,.b-danger,.b-warn,.b-pending{background:#fff;color:#000}
-.note{border-left-color:#fff;background:#121212;color:#ddd}
-.section-label:before{background:#fff}
-.audit-strong,.audit-id,.audit-user,.audit-amount,.zero{color:#fff;text-shadow:none}
-.game-grid label{background:#101010;border-color:#333}
-.game-grid input{accent-color:#fff}
-.report-output{background:#080808;border-color:#333}
-.report-output .win,.report-output .lose,.report-output .draw{color:#fff}
-.filter-btn.active{outline:2px solid #fff}
-.pill{background:#111;border-color:#333}
-.empty{color:#aaa}
-</style>
 </head>
 <body>
 <header>
@@ -506,53 +460,7 @@ function bonusData(){return bonusRows.map(r=>[r.user,r.largest.amount,r.expected
 function firstData(){return firstRows.map(r=>[r.no,r.register,r.user,r.deposit,r.free])}
 function exportCSV(headers,data,name){download(name,'\ufeff'+[headers,...data].map(row=>row.map(csvEscape).join(',')).join('\r\n'),'text/csv;charset=utf-8')}
 function exportXLS(headers,data,name,title){
-  let html='<html><head><meta charset="utf-8">
-<style id="monochrome-theme">
-/* MARIOBOLA TOOLS — Minimal Monochrome Theme
-   Semua elemen UI menggunakan hitam/putih/abu-abu.
-   Asset logo dan favicon sengaja TIDAK diberi grayscale filter.
-*/
-:root{
-  --bg:#000;--panel:#111;--panel2:#1a1a1a;--line:#333;--line2:#444;
-  --text:#fff;--muted:#aaa;--accent:#fff;--accent2:#ddd;
-  --green:#fff;--red:#fff;--orange:#fff;--blue:#fff;
-}
-body{background:#000;color:#fff}
-body:before{background:linear-gradient(135deg,#000 0%,#111 50%,#000 100%)}
-body:after{opacity:.10;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)}
-header{background:rgba(0,0,0,.96);border-bottom:1px solid #333;box-shadow:0 10px 40px rgba(0,0,0,.7)}
-.brand-logo{filter:drop-shadow(0 0 12px rgba(0,0,0,.55))}
-.brand-mark{background:#fff;color:#000;box-shadow:0 0 22px rgba(255,255,255,.12)}
-.sub,.hint,.muted,.source-count,.report-member label,.stat span{color:#aaa}
-.header-chip{border-color:#333;background:#111;color:#ddd}
-nav{background:rgba(8,8,8,.97);border-bottom:1px solid #2b2b2b}
-nav button{background:#111;color:#ddd;border-color:#333}
-nav button:hover{border-color:#666}
-nav button.active{background:#fff;border-color:#fff;color:#000;box-shadow:0 8px 24px rgba(255,255,255,.10)}
-.card{background:linear-gradient(145deg,#151515,#0b0b0b);border-color:#2b2b2b;box-shadow:0 20px 65px rgba(0,0,0,.55),inset 0 1px rgba(255,255,255,.04)}
-textarea,input,select,.copy-area{background:#080808;color:#fff;border-color:#333}
-textarea:focus,input:focus,select:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.08)}
-button.primary,.btn{background:#fff;color:#000;box-shadow:0 7px 22px rgba(255,255,255,.08)}
-.btn2,.export{background:#151515;color:#fff;border-color:#333}
-.btn2:hover,.export:hover{border-color:#666}
-.stats .stat{background:linear-gradient(145deg,#171717,#0b0b0b);border-color:#2b2b2b}
-.table-wrap{background:#080808;border-color:#333}
-th{background:#1c1c1c;color:#fff}
-th,td{border-bottom-color:#242424}
-.ok,.danger,.warn,.pending{background:#161616}
-.badge,.b-ok,.b-danger,.b-warn,.b-pending{background:#fff;color:#000}
-.note{border-left-color:#fff;background:#121212;color:#ddd}
-.section-label:before{background:#fff}
-.audit-strong,.audit-id,.audit-user,.audit-amount,.zero{color:#fff;text-shadow:none}
-.game-grid label{background:#101010;border-color:#333}
-.game-grid input{accent-color:#fff}
-.report-output{background:#080808;border-color:#333}
-.report-output .win,.report-output .lose,.report-output .draw{color:#fff}
-.filter-btn.active{outline:2px solid #fff}
-.pill{background:#111;border-color:#333}
-.empty{color:#aaa}
-</style>
-</head><body><table border="1"><tr>'+
+  let html='<html><head><meta charset="utf-8"></head><body><table border="1"><tr>'+
     headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>';
   data.forEach(row=>{
     html+='<tr>'+row.map((x,i)=>{
