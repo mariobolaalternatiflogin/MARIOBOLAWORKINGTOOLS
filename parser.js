@@ -466,7 +466,6 @@ export function processDailyBonus(historyText, opts={}){
   // Payment Method may be present (normally Agent Deposit), but the input report format
   // may also omit Payment Method/Status columns. A blank status is therefore accepted;
   // when a status is present, only Confirmed records are included.
-  const rawRecords=parseLoose(historyText,'deposit-history');
   const target=norm(CONFIG.bonusTarget);
 
   function inputDateKey(value){
@@ -475,6 +474,35 @@ export function processDailyBonus(historyText, opts={}){
     const m=clean(value).match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
     return m ? `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}` : '';
   }
+
+  // INPUT BONUS HARian has a special footer-tolerance rule. Browser copies of the
+  // report can append a total row (e.g. 2,432.400) and page navigation text after the
+  // final transaction. That footer is NOT a bonus transaction. For browser-style rows,
+  // only the content up to the first transaction Date/Time is used to determine the
+  // amount and To Bank, so a footer total can never overwrite the final row's bonus.
+  // This is intentionally isolated to 1.2 and does not modify the 1.1 parser path.
+  function parseInputRawRecords(text){
+    const md=parseMarkdownTable(text);
+    if(md.length){
+      // Ignore total/footer rows: a real bonus row must have a username and a positive
+      // amount. Header/footer summary rows have no username.
+      return md.filter(r=>clean(get(r,'User Name','Username','UserName')));
+    }
+    const blocks=browserRowBlocks(text);
+    if(blocks.length){
+      const out=[];
+      for(const block of blocks){
+        const dateMatch=block.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?\b/i);
+        const clipped=dateMatch ? block.slice(0,dateMatch.index + dateMatch[0].length) : block;
+        const parsed=browserPlainRowToRaw(clipped,'deposit-history');
+        if(parsed?.['User Name']) out.push(parsed);
+      }
+      if(out.length)return out;
+    }
+    return parseLoose(text,'deposit-history');
+  }
+
+  const rawRecords=parseInputRawRecords(historyText);
 
   const bonus=rawRecords.map((r,i)=>{
     const username=clean(get(r,'User Name','Username','UserName'));
@@ -494,7 +522,7 @@ export function processDailyBonus(historyText, opts={}){
     return !r.status || norm(r.status)==='CONFIRMED';
   });
 
-  // DOUBLE BONUS is only an audit flag: every matching transaction remains in the output.
+  // DOUBLE BONUS is only an audit flag: every matching bonus transaction remains in the output.
   const byDay=new Map();
   for(const r of bonus){
     const key=makeDayKey(r.username,r.calendarDate);
@@ -527,6 +555,6 @@ export function processDailyBonus(historyText, opts={}){
     duplicateCount:rows.filter(r=>r.doubleBonus).length,
     distinctDates,
     calendarDayRule:true,
-    sourceRule:'To Bank contains SCB A BONUS DEPOSIT HARIAN; blank status accepted; non-Confirmed status excluded'
+    sourceRule:'To Bank contains SCB A BONUS DEPOSIT HARIAN; footer totals/page navigation ignored; blank status accepted; non-Confirmed status excluded'
   };
 }
