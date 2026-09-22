@@ -1,4 +1,4 @@
-[Uploading README.md…]()
+[README.md](https://github.com/user-attachments/files/32539139/README.md)
 # Working Tools — Bonus Module v1.8
 
 This ZIP contains the Bonus module with two tools:
@@ -21,3 +21,10 @@ Default sort: nominal largest to smallest. Other sort options: nominal smallest 
 Every matching daily-bonus transaction is retained. Multiple bonuses for the same username on the same calendar date are flagged in the audit metadata as double bonus, but they are not suppressed from Input Bonus Harian.
 
 `Edited By` is ignored.
+
+
+## v1.9.0 — Input Bonus Harian footer tolerance
+
+Perbaikan khusus **1.2 Input Bonus Harian**: total keseluruhan pada bagian paling bawah report (contoh `2,432.400`) dan teks navigasi halaman (`Page`, `of 1`, dan variasinya) tidak dianggap sebagai transaksi bonus. Untuk copy dari browser yang menempelkan footer ke blok transaksi terakhir, parser 1.2 hanya mengambil nilai transaksi sampai Date/Time transaksi tersebut, sehingga nominal bonus terakhir tidak tertimpa oleh total report.
+
+**1.1 Cek Bonus tidak diubah.** Fungsi `auditBonuses()` dan jalur pembacaan 1.1 tetap sama seperti v1.8.
