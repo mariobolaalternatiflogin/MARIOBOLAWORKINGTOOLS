@@ -64,14 +64,118 @@ function parseTSV(text){
     const o={};headers.forEach((h,i)=>o[h]=c[i]??'');return o;
   }).filter(Boolean);
 }
-function parseLoose(text){
-  // Prefer Markdown/HTML-table text when pipe-delimited rows are present; otherwise use TSV.
+
+function rowStart(line){
+  // Browser copy from the report commonly starts each visual row with the row number,
+  // followed by the member username. Cells containing <br> are then emitted as extra lines.
+  return /^\s*\d{1,8}\s+(?:BEB@|[A-Za-z0-9_.-]+@)/i.test(line);
+}
+function browserRowBlocks(text){
+  const lines=clean(text).replace(/\r/g,'').split('\n');
+  const blocks=[]; let current=[];
+  for(const line of lines){
+    if(rowStart(line)){
+      if(current.length) blocks.push(current.join('\n'));
+      current=[line];
+    } else if(current.length){
+      current.push(line);
+    }
+  }
+  if(current.length) blocks.push(current.join('\n'));
+  return blocks;
+}
+function firstDate(text){
+  return clean(text).match(/\b\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?\b/i)?.[0] || '';
+}
+function firstAmountToken(text){
+  // Report amounts use forms such as 500.000, 1,050.000, 1.000.000.
+  return clean(text).match(/(?<![\d/])\d{1,3}(?:[.,]\d{3})+(?!\d)/)?.[0] || '';
+}
+function browserPlainRowToRaw(block, source){
+  const n=clean(block).replace(/\t+/g,'\t');
+  const user=n.match(/\bBEB@[^\s\t]+/i)?.[0] || n.match(/\b[A-Za-z0-9_.-]+@[^\s\t]+/i)?.[0] || '';
+  const date=firstDate(n);
+  const amount=firstAmountToken(n);
+  const payment=n.match(/\b(?:QR\s*Pay|Agent\s+Deposit|Member\s+Deposit)\b/i)?.[0] || '';
+  const status=n.match(/\b(?:Confirmed|Deleted|Pending|Processing|Rejected|Cancelled)\b/i)?.[0] || '';
+  const remark=CONFIG.excludedRemarks.find(x=>norm(n).includes(x)) || '';
+
+  // When clipboard data still contains cell tabs, reconstruct the known report columns.
+  const cells=n.split('\t').map(clean);
+  const first=cells[0].match(/^\d{1,8}$/) ? 1 : 0;
+  if(cells.length >= (source==='qrpay'?10:7) && user){
+    if(source==='qrpay'){
+      const idxDate=cells.findIndex(c=>parseDateTime(c));
+      const idxAmount=cells.findIndex(c=>firstAmountToken(c));
+      const obj={
+        'User Name': user,
+        'From Bank': cells[first+1]||'',
+        'To Bank': cells[first+2]||'',
+        'Amount': cells[idxAmount>=0?idxAmount:first+3]||amount,
+        'Reference': cells[first+4]||'',
+        'RRN': cells[first+5]||'',
+        'Date': cells[idxDate>=0?idxDate:first+6]||date,
+        'Payment Method': cells.find(c=>/^(QR\s*Pay|Agent\s+Deposit|Member\s+Deposit)$/i.test(c))||payment,
+        'Status': cells.find(c=>/^(Confirmed|Deleted|Pending|Processing|Rejected|Cancelled)$/i.test(c))||status,
+        'Invoice': cells.find(c=>/^View$/i.test(c))||'',
+        'Status Date': cells.slice(Math.max(idxDate+1,0)).find(c=>parseDateTime(c))||'',
+        'Remark': remark,
+        'Edited By': ''
+      };
+      return obj;
+    }
+    const obj={
+      'User Name': user,
+      'From Bank': cells[first+1]||'',
+      'To Bank': cells[first+2]||'',
+      'Amount': amount || cells[first+3]||'',
+      'Date': date || cells[first+4]||'',
+      'Payment Method': cells.find(c=>/^(QR\s*Pay|Agent\s+Deposit|Member\s+Deposit)$/i.test(c))||payment,
+      'Status': cells.find(c=>/^(Confirmed|Deleted|Pending|Processing|Rejected|Cancelled)$/i.test(c))||status,
+      'Status Date': cells.filter(c=>parseDateTime(c)).find(c=>c!==date)||'',
+      'Remark': remark,
+      'Edited By': ''
+    };
+    // The browser often breaks the three-line To Bank cell over physical lines. If the
+    // target text is visible anywhere in the row, force it into To Bank so classification works.
+    if(norm(n).includes(norm(CONFIG.bonusTarget))) obj['To Bank']=`${obj['To Bank']}\n${CONFIG.bonusTarget}`.trim();
+    return obj;
+  }
+
+  // Fully flattened browser text (no useful tabs): parse only the fields required by the
+  // bonus engine. Bank/account detail is informational and does not need exact boundaries.
+  return {
+    'User Name':user,
+    'From Bank':'',
+    'To Bank': norm(n).includes(norm(CONFIG.bonusTarget)) ? CONFIG.bonusTarget : '',
+    'Amount':amount,
+    'Reference':'',
+    'RRN':'',
+    'Date':date,
+    'Payment Method':payment,
+    'Status':status,
+    'Invoice':'',
+    'Status Date':'',
+    'Remark':remark,
+    'Edited By':''
+  };
+}
+function parseBrowserCopy(text, source){
+  const blocks=browserRowBlocks(text);
+  if(!blocks.length)return [];
+  return blocks.map((b)=>browserPlainRowToRaw(b,source)).filter(r=>r['User Name'] && r['Amount'] && r['Date']);
+}
+function parseLoose(text, source='deposit-history'){
+  // 1) Markdown table (our test/example format).
   if(/(^|\n)\s*\|[^\n]*\|\s*(\n|$)/.test(text)) { const rows=parseMarkdownTable(text); if(rows.length)return rows; }
+  // 2) Real browser copy: row numbers + multiline table cells.
+  const browserRows=parseBrowserCopy(text,source); if(browserRows.length)return browserRows;
+  // 3) Conventional TSV fallback.
   const rows=parseTSV(text); if(rows.length)return rows;
   return parseMarkdownTable(text);
 }
 export function parseReport(text, source='deposit-history'){
-  const rows=parseLoose(text);
+  const rows=parseLoose(text,source);
   return rows.map((r,i)=>normalizeRow(r,i,source)).filter(Boolean);
 }
 function get(r, ...names){
