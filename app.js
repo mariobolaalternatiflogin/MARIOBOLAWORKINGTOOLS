@@ -65,9 +65,12 @@ function renderInput(){
   const currentRows=inputRows;
   const visible=currentRows.filter(r=>!hiddenNames.has(String(r.username)));
   const hidden=currentRows.filter(r=>hiddenNames.has(String(r.username)));
-  $('#inputSummary').textContent=`${visible.length} baris tampil • ${hidden.length} disembunyikan • ${currentRows.filter(r=>r.doubleBonus).length} baris berada pada username yang muncul lebih dari sekali`;
-  tb.innerHTML=visible.length?visible.map(r=>`<tr><td class="username-cell"><b>${escapeHtml(r.username)}</b></td><td class="bonus-expected-cell"><span class="bonus-expected">${money(r.amount)}</span></td><td>${escapeHtml(r.date)}</td><td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td><td><button class="hide-btn" data-hide-input="${currentRows.indexOf(r)}">Sembunyikan</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Tidak ada data yang tampil.</td></tr>';
-  $('#hiddenInput').innerHTML=hidden.length?`<div class="hidden-title">Username yang disembunyikan — tetap tersembunyi saat data baru diproses (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>${money(r.amount)} • ${escapeHtml(r.date)}</span><button class="hide-btn" data-show-input="${currentRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';
+  const dates=[...new Set(currentRows.map(r=>r.calendarDate).filter(Boolean))];
+  const dateText=dates.length===1?`Tanggal ${dates[0]}`:(dates.length>1?`${dates.length} tanggal terdeteksi`:'Tanggal tidak terbaca');
+  const doubles=currentRows.filter(r=>r.doubleBonus).length;
+  $('#inputSummary').textContent=`${visible.length} baris tampil • ${hidden.length} disembunyikan • ${doubles} transaksi berada pada username yang mendapat bonus lebih dari 1× pada tanggal yang sama • ${dateText}`;
+  tb.innerHTML=visible.length?visible.map(r=>`<tr${r.doubleBonus?' class="duplicate-bonus-row"':''}><td class="username-cell input-username-cell"><b>${escapeHtml(r.username)}</b><button class="row-hide-icon" type="button" data-hide-input="${currentRows.indexOf(r)}" title="Sembunyikan username ini">×</button></td><td class="bonus-expected-cell"><span class="bonus-expected">${String(Math.trunc(Number(r.amount)||0))}</span></td></tr>`).join(''):'<tr><td colspan="2" class="empty">Tidak ada data bonus harian yang tampil.</td></tr>';
+  $('#hiddenInput').innerHTML=hidden.length?`<div class="hidden-title">Username yang disembunyikan — tetap tersembunyi saat data baru diproses (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>${String(Math.trunc(Number(r.amount)||0))} • ${escapeHtml(r.date)}</span><button class="hide-btn" data-show-input="${currentRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';
 }
 function updateFilterButtons(){document.querySelectorAll('[data-check-filter]').forEach(b=>b.classList.toggle('active',b.dataset.checkFilter===checkFilter));}
 $('#processCheck').onclick=()=>{
@@ -90,14 +93,21 @@ $('#processInput').onclick=()=>{
   const h=$('#inputHistory').value.trim();
   if(!h){$('#inputSummary').textContent='Data Deposit Request History wajib diisi.';return;}
   const parsed=parseReport(h,'deposit-history');
-  const rows=processDailyBonus(h,{sort:$('#sort').value}).rows;
+  const result=processDailyBonus(h,{sort:$('#sort').value});
   const hiddenNames=getHiddenSet(HIDDEN_INPUT_KEY);
-  rows.forEach(r=>{r.hidden=hiddenNames.has(String(r.username));});
-  inputRows=rows;
+  result.rows.forEach(r=>{r.hidden=hiddenNames.has(String(r.username));});
+  inputRows=result.rows;
   renderInput();
-  $('#inputSummary').textContent=`History terbaca ${parsed.length} transaksi • ${inputRows.length} bonus harian Confirmed tampil`;
+  const dateText=result.distinctDates.length===1?` tanggal ${result.distinctDates[0]}`:(result.distinctDates.length?` pada ${result.distinctDates.length} tanggal`:'');
+  $('#inputSummary').textContent=`History terbaca ${parsed.length} transaksi • ${inputRows.length} bonus harian Confirmed${dateText} • ${result.duplicateCount} transaksi double username/tanggal`;
 };
-$('#copyInput').onclick=async()=>{const txt=inputRows.filter(r=>!getHiddenSet(HIDDEN_INPUT_KEY).has(String(r.username))).map(r=>`${r.username}\t${r.amount}`).join('\n'); if(!txt)return; await navigator.clipboard.writeText(txt);$('#inputSummary').textContent='Hasil 2 kolom berhasil disalin ke clipboard.';};
+$('#copyInput').onclick=async()=>{
+  const hiddenNames=getHiddenSet(HIDDEN_INPUT_KEY);
+  // EXACTLY TWO EXCEL COLUMNS: username + integer nominal. No thousands separators, no decimals.
+  const txt=inputRows.filter(r=>!hiddenNames.has(String(r.username))).map(r=>`${r.username}\t${Math.trunc(Number(r.amount)||0)}`).join('\n');
+  if(!txt)return;
+  try{await navigator.clipboard.writeText(txt);$('#inputSummary').textContent=`Hasil 2 kolom berhasil disalin ke Excel: ${txt.split('\n').length} baris.`;}catch{$('#inputSummary').textContent='Clipboard browser tidak tersedia. Gunakan salin manual dari hasil 2 kolom.';}
+};
 document.addEventListener('click',e=>{
   const filter=e.target.closest('[data-check-filter]');
   if(filter){checkFilter=filter.dataset.checkFilter;$('#checkFilterLabel').textContent=filter.textContent.trim();updateFilterButtons();renderCheck();return;}
