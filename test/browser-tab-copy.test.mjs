@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {parseReport} from '../parser.js';
+const qr=`727\tBEB@Fahmiolo\tBCA\nMuhammad Fahmi\n0941978168\tPrabuPay\nmariobola_oauser\n4398778-be92-469d-bd58-cb6a18a886e7\t1,050.000\t17900927488641523\t\t22/09/2026 11:59:09 PM\tQR Pay\tConfirmed\tView\t22/09/2026 11:59:19 PM\tAbd\tQRPay User`;
+const p=parseReport(qr,'qrpay');
+console.dir(p,{depth:3});
+assert.equal(p.length,1);
+assert.equal(p[0].amount,1050000);
+assert.equal(p[0].dateRaw,'22/09/2026 11:59:09 PM');
+assert.equal(p[0].statusDate,'22/09/2026 11:59:19 PM');
+console.log('TAB QR PASSED');
+const hist=`465\tBEB@Pingky\tDANA\nRahmat pani habisuan\n08**6265****\tSCB\nSCB A BONUS DEPOSIT HARIAN\n01\t1.500\t22/09/2026 11:53:22 PM\tAgent Deposit\tConfirmed\t22/09/2026 11:54:07 PM\t\tbeb@mario08`;
+const h=parseReport(hist,'deposit-history');
+console.dir(h,{depth:3});
+assert.equal(h.length,1); assert.equal(h[0].transactionType,'DAILY_BONUS'); assert.equal(h[0].amount,1500); assert.equal(h[0].dateRaw,'22/09/2026 11:53:22 PM');
+console.log('TAB HIST PASSED');
