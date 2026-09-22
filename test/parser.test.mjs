@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import {parseReport,auditBonuses,processDailyBonus} from '../parser.js';
-const qr=`| | **User Name** | **From Bank** | **To Bank** | **Amount** | **Reference** | **RRN** | **Date** | **Payment Method** | **Status** | **Invoice** | **Status Date** | **Remark** | **Edited By** |
+const Deposit Request History QRPay=`| | **User Name** | **From Bank** | **To Bank** | **Amount** | **Reference** | **RRN** | **Date** | **Payment Method** | **Status** | **Invoice** | **Status Date** | **Remark** | **Edited By** |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 |1|BEB\\@Sf0810|DANA<br>Sultan Faiz Alfalah<br>08**19087***|PrabuPay<br>mariobola_oauser<br>id|**500.000**|179| |22/09/2026 12:00:37 AM|QR Pay|Confirmed|View|22/09/2026 12:01:23 AM| |QRPay User|`;
-const history=`| ** ** | **User Name** | **From Bank** | **To Bank** | **Amount** | **Date** | **Payment Method** | **Status** | **Status Date** | **Remark** | **Edited By** |
+const Deposit Request History=`| ** ** | **User Name** | **From Bank** | **To Bank** | **Amount** | **Date** | **Payment Method** | **Status** | **Status Date** | **Remark** | **Edited By** |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 |1|BEB\\@Sf0810|DANA<br>Sultan Faiz Alfalah<br>08**19087***|SCB<br>SCB A BONUS DEPOSIT HARIAN<br>01|**25.000**|22/09/2026 12:03:28 AM|Agent Deposit|Confirmed|22/09/2026 12:03:57 AM||beb\\@mario08|`;
 const p=parseReport(qr,'qrpay'); assert.equal(p[0].username,'BEB@Sf0810'); assert.equal(p[0].amount,500000); assert.equal(p[0].editedBy,'');
