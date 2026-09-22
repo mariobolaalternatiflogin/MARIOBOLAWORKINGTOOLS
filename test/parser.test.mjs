@@ -163,4 +163,79 @@ assert.equal(aOverCap[0].givenBonus,101000);
 assert.equal(aOverCap[0].status,'MISTAKE');
 console.log('MAXIMUM BONUS CAP TESTS PASSED');
 
-console.log('ALL V1.4 TESTS PASSED');
+console.log('ALL V1.5 TESTS PASSED');
+
+// Agent Deposit bank-to-bank/e-wallet must count as MEMBER_DEPOSIT based on To Bank.
+const agentBankToBank = `
+1 BEB@Kakekbiru
+DANA
+Nama Kakek
+081234567890
+BCA
+Tujuan BCA
+1234567890
+500.000 23/09/2026 01:20:00 AM Agent Deposit Confirmed 23/09/2026 01:20:10 AM beb@mario08
+2 BEB@Mamates
+BRI
+Nama Mamates
+081234567891
+OVO
+Tujuan OVO
+08123456789
+250.000 23/09/2026 01:21:00 AM Agent Deposit Confirmed 23/09/2026 01:21:10 AM beb@mario08
+`;
+const parsedAgentBankToBank = parseReport(agentBankToBank,'deposit-history');
+const kakek = parsedAgentBankToBank.find(r=>r.username==='BEB@Kakekbiru');
+const mamates = parsedAgentBankToBank.find(r=>r.username==='BEB@Mamates');
+assert.ok(kakek);
+assert.ok(mamates);
+assert.equal(kakek.transactionType,'MEMBER_DEPOSIT');
+assert.equal(kakek.toBank,'BCA');
+assert.equal(mamates.transactionType,'MEMBER_DEPOSIT');
+assert.equal(mamates.toBank,'OVO');
+assert.equal(parsedAgentBankToBank.filter(r=>r.transactionType==='MEMBER_DEPOSIT').length,2);
+
+// From Bank being a supported bank is NOT enough; To Bank decides Agent Deposit classification.
+const fromTargetOnly = `
+1 BEB@FromOnly
+DANA
+Nama From
+081234567892
+SCB
+Tujuan SCB
+12345
+300.000 23/09/2026 01:30:00 AM Agent Deposit Confirmed 23/09/2026 01:30:10 AM beb@mario08
+`;
+const parsedFromOnly = parseReport(fromTargetOnly,'deposit-history');
+assert.equal(parsedFromOnly[0].toBank,'SCB');
+assert.equal(parsedFromOnly[0].transactionType,'AGENT_DEPOSIT');
+
+// Audit must no longer say "no deposit" for these Agent Deposit member transfers.
+const qrK=`1 BEB@Kakekbiru BCA PrabuPay 400.000 23/09/2026 01:00:00 AM QR Pay Confirmed`;
+const histK=`
+1 BEB@Kakekbiru DANA Nama From 0812 BCA Tujuan BCA 1234 400.000 23/09/2026 01:10:00 AM Agent Deposit Confirmed 23/09/2026 01:10:10 AM beb@mario08`;
+const ak=auditBonuses(qrK,histK,{rate:0.05});
+assert.equal(ak.length,1);
+assert.equal(ak[0].depositAmount,400000);
+assert.equal(ak[0].expectedBonus,20000);
+assert.equal(ak[0].status,'BELUM DIBERIKAN');
+assert.equal(ak[0].noSameDayDeposit,false);
+console.log('AGENT-DEPOSIT TO-BANK MEMBER CLASSIFICATION TEST PASSED');
+
+// All supported Agent Deposit member-destination To Bank names must classify as MEMBER_DEPOSIT.
+const supportedMemberBanks=['DANA','BCA','MANDIRI','BNI','BRI','DANAMON','GOPAY','GO PAY','LINKAJA','OVO'];
+for(const bank of supportedMemberBanks){
+  const copy=`1 BEB@Bank${bank.replace(/\s/g,'')}
+MANDIRI
+Nama Pengirim
+081234567890
+${bank}
+Nama Tujuan
+1234567890
+100.000 23/09/2026 02:00:00 AM Agent Deposit Confirmed 23/09/2026 02:00:05 AM beb@mario08`;
+  const row=parseReport(copy,'deposit-history')[0];
+  assert.equal(row.transactionType,'MEMBER_DEPOSIT',`To Bank ${bank} should be MEMBER_DEPOSIT`);
+}
+console.log('ALL SUPPORTED MEMBER TO-BANK NAMES TEST PASSED');
+
+console.log('ALL V1.5 TESTS PASSED');
