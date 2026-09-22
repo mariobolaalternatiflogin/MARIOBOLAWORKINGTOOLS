@@ -1,6 +1,6 @@
 export const CONFIG = {
   defaultBonusRate: 0.05,
-  matchingWindowHours: 24,
+  matchingWindowHours: 24, // legacy compatibility only; audit uses calendar dates, not rolling hours
   bonusTarget: 'SCB A BONUS DEPOSIT HARIAN',
   excludedRemarks: [
     'SAFETY BET','SB','NO BONUS','TIDAK MAU BONUS','NB','BATAL WD',
@@ -224,47 +224,184 @@ export function latestByUsername(records){
   for(const r of records){ if(!r.username)continue; const prev=m.get(r.username); if(!prev || (r.date&&prev.date&&r.date>prev.date) || (!prev.date&&r.date))m.set(r.username,r); }
   return [...m.values()];
 }
-function inWindow(bonus, deposit, hours){
-  if(!bonus.date||!deposit.date)return false;
-  const diff=bonus.date.getTime()-deposit.date.getTime();
-  return diff>=0 && diff<=hours*3600000;
+function calendarDateKey(value){
+  const d=value instanceof Date ? value : parseDateTime(value);
+  if(!d)return '';
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
 }
 function expectedBonus(deposit, rate){return Math.round(deposit.amount*rate);}
+function sortByDate(records){
+  return [...records].sort((a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0));
+}
+function buildDepositEvents(qrRecords, historyRecords){
+  const qrDeposits=getDepositRecords(qrRecords,'qrpay').filter(r=>r.amount>0);
+  const memberDeposits=getDepositRecords(historyRecords,'history').filter(r=>r.amount>0);
+  return sortByDate([...qrDeposits,...memberDeposits]);
+}
+function makeDayKey(user, dateKey){return `${user}\u001f${dateKey}`;}
+
+// Business rule: one bonus per username per CALENDAR DAY (00:00:00–23:59:59),
+// not a rolling 24-hour window. QRPay and Member Deposit share the same day bucket.
+// A normal bonus is valid only when there is a confirmed deposit for the same username
+// on the same calendar date and the deposit happened before the bonus.
 export function auditBonuses(qrText, historyText, opts={}){
   const rate=Number.isFinite(Number(opts.rate))?Number(opts.rate):CONFIG.defaultBonusRate;
-  const windowHours=Number.isFinite(Number(opts.windowHours))?Number(opts.windowHours):CONFIG.matchingWindowHours;
   const qr=parseReport(qrText,'qrpay');
   const hist=parseReport(historyText,'deposit-history');
-  const deposits=latestByUsername(getDepositRecords(qr,'qrpay'));
-  const bonuses=getDailyBonusRecords(hist);
-  const allByUser=new Map(); bonuses.forEach(b=>{if(!allByUser.has(b.username))allByUser.set(b.username,[]);allByUser.get(b.username).push(b);});
-  return deposits.map(dep=>{
-    const expected=expectedBonus(dep,rate);
-    const candidates=(allByUser.get(dep.username)||[]).filter(b=>inWindow(b,dep,windowHours) && b.remarkStatus==='NORMAL');
-    candidates.sort((a,b)=> (a.date?.getTime()||0)-(b.date?.getTime()||0));
-    // All eligible bonus transactions after the latest deposit are reconciled together.
-    // This correctly handles split bonus payments (e.g. 20k + 5k = expected 25k) and double payments.
-    const used=candidates;
-    const given=used.reduce((s,b)=>s+b.amount,0);
-    const count=used.length;
-    const difference=given-expected;
+  const deposits=buildDepositEvents(qr,hist);
+  const bonuses=sortByDate(getDailyBonusRecords(hist));
+
+  const users=new Map();
+  const ensureUser=(username)=>{
+    if(!users.has(username))users.set(username,{deposits:[],bonuses:[]});
+    return users.get(username);
+  };
+  for(const dep of deposits){ if(dep.username) ensureUser(dep.username).deposits.push(dep); }
+  for(const bonus of bonuses){ if(bonus.username) ensureUser(bonus.username).bonuses.push(bonus); }
+
+  const rows=[];
+  let suppressedDeposits=0;
+
+  const buildRow=(username, dateKey, dep, bonusRecords, extra={})=>{
+    const expected=dep ? expectedBonus(dep,rate) : 0;
+    const given=bonusRecords.reduce((sum,b)=>sum+b.amount,0);
+    const doubleBonus=bonusRecords.length>1;
+    const overBonus=given>expected;
+    const noSameDayDeposit=!!extra.noSameDayDeposit;
     let status='BELUM DIBERIKAN';
-    if(count>0) status=difference===0?'SESUAI':difference>0?'LEBIH BONUS':'KEKURANGAN BONUS';
-    const doubleBonus=count>1;
-    const remarks=(allByUser.get(dep.username)||[]).filter(b=>inWindow(b,dep,windowHours)).map(b=>b.remarkStatus).filter(x=>x!=='NORMAL');
-    const blocked=remarks.length?remarks[0]:'NORMAL';
-    if(blocked!=='NORMAL') { status='DIBLOKIR / TIDAK BONUS'; }
-    return {username:dep.username,depositAmount:dep.amount,expectedBonus:expected,givenBonus:given,difference,status,doubleBonus,remarkStatus:blocked,depositDate:dep.dateRaw,deposit:dep,bonusRecords:used,hidden:false};
+    if(extra.blockedRemark && !bonusRecords.length){
+      status='DIBLOKIR / TIDAK BONUS';
+    } else if(bonusRecords.length){
+      if(doubleBonus || overBonus || noSameDayDeposit) status='MISTAKE';
+      else if(given===expected) status='SESUAI';
+      else status='SUDAH DIBERIKAN';
+    }
+    const bonusTime=bonusRecords[0]?.dateRaw||extra.orphanBonusTime||'';
+    return {
+      username,
+      dateKey,
+      depositAmount:dep?.amount||0,
+      expectedBonus:expected,
+      givenBonus:given,
+      difference:given-expected,
+      status,
+      doubleBonus,
+      overBonus,
+      remarkStatus:extra.remarkStatus||'NORMAL',
+      depositDate:dep?.dateRaw || (bonusTime ? `— (bonus ${bonusTime})` : '—'),
+      deposit:dep||null,
+      bonusRecords:[...bonusRecords],
+      hidden:false,
+      depositSource:dep?.source||'',
+      noSameDayDeposit,
+      bonusWithoutSameDayDeposit:noSameDayDeposit
+    };
+  };
+
+  // Process one calendar date at a time. This makes cross-midnight transactions
+  // intentionally independent: a deposit on 22/09 cannot validate a bonus on 23/09.
+  for(const [username,state] of users){
+    const depositsByDay=new Map();
+    for(const dep of sortByDate(state.deposits)){
+      const key=calendarDateKey(dep.date);
+      if(!key)continue;
+      if(!depositsByDay.has(key))depositsByDay.set(key,[]);
+      depositsByDay.get(key).push(dep);
+    }
+    const bonusesByDay=new Map();
+    for(const bonus of sortByDate(state.bonuses)){
+      const key=calendarDateKey(bonus.date);
+      if(!key)continue;
+      if(!bonusesByDay.has(key))bonusesByDay.set(key,[]);
+      bonusesByDay.get(key).push(bonus);
+    }
+
+    const dayKeys=[...new Set([...depositsByDay.keys(),...bonusesByDay.keys()])].sort();
+    for(const dateKey of dayKeys){
+      const dayDeposits=sortByDate(depositsByDay.get(dateKey)||[]);
+      const dayBonuses=sortByDate(bonusesByDay.get(dateKey)||[]);
+      const normalBonuses=dayBonuses.filter(b=>b.remarkStatus==='NORMAL');
+      const blockedRemark=dayBonuses.find(b=>b.remarkStatus!=='NORMAL')?.remarkStatus||'';
+
+      if(normalBonuses.length){
+        const firstBonus=normalBonuses[0];
+        // Only deposits on the SAME calendar date and at/before the first bonus are eligible.
+        const beforeFirstBonus=dayDeposits.filter(d=>d.date && firstBonus.date && d.date.getTime()<=firstBonus.date.getTime());
+        const selected=beforeFirstBonus.length?beforeFirstBonus[beforeFirstBonus.length-1]:null;
+        const noSameDayDeposit=!selected;
+
+        // Once one normal bonus exists on this date, every other deposit for this username
+        // on that same date is ineligible. Exactly one deposit slot remains for the day.
+        if(dayDeposits.length){
+          suppressedDeposits += selected ? Math.max(0,dayDeposits.length-1) : dayDeposits.length;
+        }
+
+        const row=buildRow(username,dateKey,selected,normalBonuses,{
+          blockedRemark:blockedRemark,
+          remarkStatus:noSameDayDeposit ? 'BONUS TANPA DEPOSIT PADA TANGGAL YANG SAMA' : (blockedRemark||'NORMAL'),
+          noSameDayDeposit,
+          orphanBonusTime:firstBonus.dateRaw
+        });
+        rows.push(row);
+        continue;
+      }
+
+      // No normal bonus on this date: show only the latest confirmed deposit for the day.
+      // Repeated deposits from both QRPay and Member Deposit are intentionally suppressed.
+      if(dayDeposits.length){
+        const selected=dayDeposits[dayDeposits.length-1];
+        suppressedDeposits += Math.max(0,dayDeposits.length-1);
+        rows.push(buildRow(username,dateKey,selected,[],{
+          blockedRemark,
+          remarkStatus:blockedRemark||'NORMAL'
+        }));
+      }
+      // A blocked/no-bonus record without a deposit on that same date does not create a
+      // mistake because it represents a bonus that was explicitly blocked, not a granted bonus.
+    }
+  }
+
+  rows.sort((a,b)=>{
+    const d=(a.deposit?.date?.getTime()??Infinity)-(b.deposit?.date?.getTime()??Infinity);
+    return d || a.username.localeCompare(b.username);
   });
+  rows.suppressedDeposits=suppressedDeposits;
+  rows.doubleBonusRows=rows.filter(r=>r.doubleBonus).length;
+  rows.mistakeRows=rows.filter(r=>r.status==='MISTAKE').length;
+  rows.calendarDayRule=true;
+  return rows;
 }
 export function processDailyBonus(historyText, opts={}){
   const records=parseReport(historyText,'deposit-history');
   const bonus=getDailyBonusRecords(records);
   const excluded=new Set((opts.excludedRemarks||CONFIG.excludedRemarks).map(norm));
   const filtered=bonus.filter(r=>!excluded.has(norm(r.remarkStatus)) && r.remarkStatus==='NORMAL');
-  const counts=new Map(); filtered.forEach(r=>counts.set(r.username,(counts.get(r.username)||0)+1));
-  const rows=filtered.map(r=>({username:r.username,amount:r.amount,date:r.dateRaw,status:r.status,doubleBonus:(counts.get(r.username)||0)>1,hidden:false}));
+
+  // DOUBLE BONUS is determined by the SAME username + SAME calendar date only.
+  const byDay=new Map();
+  for(const r of filtered){
+    const key=makeDayKey(r.username,calendarDateKey(r.date));
+    if(!byDay.has(key))byDay.set(key,[]);
+    byDay.get(key).push(r);
+  }
+  const rows=filtered.map(r=>{
+    const key=makeDayKey(r.username,calendarDateKey(r.date));
+    const sameDay=byDay.get(key)||[];
+    const doubleBonus=sameDay.length>1;
+    return {
+      username:r.username,
+      amount:r.amount,
+      date:r.dateRaw,
+      status:r.status,
+      doubleBonus,
+      hidden:false
+    };
+  });
   const sort=opts.sort||'amount-desc';
   rows.sort((a,b)=>sort==='username-asc'?a.username.localeCompare(b.username):sort==='username-desc'?b.username.localeCompare(a.username):sort==='amount-asc'?a.amount-b.amount:b.amount-a.amount);
-  return {rows,duplicateCount:rows.filter(r=>r.doubleBonus).length};
+  return {
+    rows,
+    duplicateCount:rows.filter(r=>r.doubleBonus).length,
+    calendarDayRule:true
+  };
 }
