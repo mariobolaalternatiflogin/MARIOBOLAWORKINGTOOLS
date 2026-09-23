@@ -127,26 +127,29 @@ export function processNewMemberFirstDeposit(newMembersText='', qrText='', histo
   }
 
   const rows=[];
+  let matchedCount=0;
   for(const m of members){
     const candidates=(byUser.get(userKey(m.username))||[]).filter(d=>{
       const dk=dateKey(d.date);
       return dk===m.calendarDate && d.date.getTime()>=m.registerDate.getTime();
     });
-    if(!candidates.length) continue;
     const first=[...candidates].sort((a,b)=>a.date.getTime()-b.date.getTime())[0];
+    const depositAmount=first ? Math.trunc(Number(first.amount)||0) : 0;
+    if(first) matchedCount++;
     rows.push({
       username:m.username,
       registerDateRaw:m.registerDateRaw,
       registerDate:m.registerDate,
       calendarDate:m.calendarDate,
-      depositAmount:Math.trunc(Number(first.amount)||0),
-      depositDateRaw:first.dateRaw,
-      depositSource:first.source,
+      depositAmount,
+      depositDateRaw:first?.dateRaw||'',
+      depositSource:first?.source||'',
+      matched:!!first,
       hidden:false
     });
   }
   rows.sort((a,b)=>a.registerDate.getTime()-b.registerDate.getTime() || a.username.localeCompare(b.username));
-  return {members, rows, memberCount:members.length, qrCount:qr.length, historyCount:hist.length, matchedCount:rows.length, distinctDates:[...new Set(members.map(m=>m.calendarDate).filter(Boolean))].sort()};
+  return {members, rows, memberCount:members.length, qrCount:qr.length, historyCount:hist.length, matchedCount, noDepositCount:members.length-matchedCount, distinctDates:[...new Set(members.map(m=>m.calendarDate).filter(Boolean))].sort()};
 }
 
 export function sortMemberFirstDepositRows(rows, mode='register-asc'){
