@@ -29,13 +29,25 @@ assert.equal(parsed[1]['Register Date'],'9/22/2026 9:45:39 PM');
 const result=processNewMemberFirstDeposit(newMembers,qr,history);
 assert.equal(result.memberCount,4);
 assert.equal(result.matchedCount,1);
-assert.equal(result.rows[0].username,'BEB@Mamatdong8');
-assert.equal(result.rows[0].depositAmount,25000);
-assert.equal(result.rows[0].registerDateRaw,'9/22/2026 9:45:39 PM');
-assert.equal(result.rows[0].depositSource,'qrpay');
+assert.equal(result.noDepositCount,3);
+assert.equal(result.rows.length,4);
+assert.equal(result.rows[0].username,'BEB@fatimah25');
+assert.equal(result.rows[0].depositAmount,0);
+assert.equal(result.rows[1].username,'BEB@Uwi');
+assert.equal(result.rows[1].depositAmount,0);
+assert.equal(result.rows[2].username,'BEB@Mamatdong8');
+assert.equal(result.rows[2].depositAmount,25000);
+assert.equal(result.rows[3].username,'BEB@gacok212104');
+assert.equal(result.rows[3].depositAmount,0);
+assert.equal(result.rows[2].username,'BEB@Mamatdong8');
+assert.equal(result.rows[2].depositAmount,25000);
+assert.equal(result.rows[2].registerDateRaw,'9/22/2026 9:45:39 PM');
+assert.equal(result.rows[2].depositSource,'qrpay');
 
 const sorted=sortMemberFirstDepositRows(result.rows,'username-asc');
-assert.equal(sorted[0].username,'BEB@Mamatdong8');
+assert.equal(sorted[0].username,'BEB@fatimah25');
+assert.equal(sorted[0].depositAmount,0);
+assert.equal(sorted.find(x=>x.username==='BEB@Mamatdong8')?.depositAmount,25000);
 
 // Same-day bank-to-bank Agent Deposit on a member bank is a valid member deposit.
 const historyDeposit=`1 BEB@Uwi\nDANA\nUbung\n08**1***\nBCA\nBCA\nAccount\n12.000\n22/09/2026 09:30:00 PM\nAgent Deposit\nConfirmed\n22/09/2026 09:31:00 PM`;
@@ -45,6 +57,8 @@ assert.equal(r2.rows.find(x=>x.username==='BEB@Uwi')?.depositAmount,12000);
 // Deposit before registration on the same date must NOT match.
 const historyEarly=`1 BEB@Uwi\nDANA\nUbung\n08**1***\nBCA\nBCA\nAccount\n12.000\n22/09/2026 08:00:00 PM\nAgent Deposit\nConfirmed\n22/09/2026 08:01:00 PM`;
 const r3=processNewMemberFirstDeposit(newMembers,'',historyEarly);
-assert.equal(r3.rows.some(x=>x.username==='BEB@Uwi'),false);
+assert.equal(r3.rows.some(x=>x.username==='BEB@Uwi'),true);
+assert.equal(r3.rows.find(x=>x.username==='BEB@Uwi')?.depositAmount,0);
+assert.equal(r3.rows.length,4);
 
 console.log('MEMBER NEW FIRST DEPOSIT TESTS PASSED');
