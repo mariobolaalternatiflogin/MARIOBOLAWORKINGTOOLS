@@ -45,14 +45,21 @@ function matchesCheckFilter(r){
 function rowHtml(r,index){
   const black=isBlacklisted(r);
   const mistakeDouble=r.status==='MISTAKE' || r.doubleBonus;
+  const blacklistReason=r.safetyBlacklist?.reason||'';
+  const blacklistNote=r.safetyBlacklist?.note||'';
+  const statusText=black?'DI BLACKLIST MEMBER SB':r.status;
+  const statusTone=black?'blacklist':statusClass(r.status);
+  const remarkHtml=black
+    ? `<div class="blacklist-message"><span class="blacklist-badge">DI BLACKLIST MEMBER SB</span><b>${escapeHtml(blacklistReason||'Blacklist member')}</b>${blacklistNote?`<span class="blacklist-note">${escapeHtml(blacklistNote)}</span>`:''}</div>`
+    : escapeHtml(r.remarkStatus);
   return `<tr class="${black?'blacklist-row ':''}${mistakeDouble?'attention-row':''}" title="${black?'BLACKLIST: jangan berikan bonus untuk member ini.':''}">
     <td class="username-cell"><b>${escapeHtml(r.username)}</b></td>
     <td>${money(r.depositAmount)}</td>
     <td class="bonus-expected-cell"><span class="bonus-expected">${money(r.expectedBonus)}</span></td>
     <td class="bonus-given-cell"><span class="bonus-given">${money(r.givenBonus)}</span></td>
-    <td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td>
+    <td><span class="status ${statusTone}">${escapeHtml(statusText)}</span></td>
     <td><span class="pill ${r.doubleBonus?'yes':'no'}">${r.doubleBonus?'YA':'TIDAK'}</span></td>
-    <td>${black?'<span class="blacklist-badge">BLACKLIST</span> ':''}${r.safetyBlacklist?escapeHtml(r.safetyBlacklist.reason||'')+' ':''}${escapeHtml(r.remarkStatus)}</td>
+    <td>${remarkHtml}</td>
     <td>${escapeHtml(r.depositDate)}</td>
     <td><button class="hide-btn" data-hide-check="${index}">Sembunyikan</button></td>
   </tr>`;
@@ -131,6 +138,8 @@ document.addEventListener('click',e=>{
   if(c){const row=inputRows[Number(c.dataset.hideInput)];if(row){const s=getHiddenSet(HIDDEN_INPUT_KEY);s.add(String(row.username));saveHidden(HIDDEN_INPUT_KEY,s);row.hidden=true;}renderInput();}
   const cs=e.target.closest('[data-show-input]');
   if(cs){const row=inputRows[Number(cs.dataset.showInput)];if(row){const s=getHiddenSet(HIDDEN_INPUT_KEY);s.delete(String(row.username));saveHidden(HIDDEN_INPUT_KEY,s);row.hidden=false;}renderInput();}
+  const cn=e.target.closest('[data-show-new-member]');
+  if(cn){const row=newMemberRows[Number(cn.dataset.showNewMember)];if(row){const s=getHiddenSet(HIDDEN_NEW_MEMBER_KEY);s.delete(String(row.username));saveHidden(HIDDEN_NEW_MEMBER_KEY,s);row.hidden=false;}renderFirstDeposit();}
   const ex=e.target.closest('[data-example]');
   if(ex){const type=ex.dataset.example;if(type==='qr')$('#qrText').value=EXAMPLE_QR;else if(type==='history'){$('#historyText').value=EXAMPLE_HISTORY;$('#inputHistory').value=EXAMPLE_HISTORY;$('#fdHistoryText').value=EXAMPLE_HISTORY;}else if(type==='newmembers')$('#newMembersText').value=EXAMPLE_NEW_MEMBERS;}
 });
@@ -145,16 +154,18 @@ function renderSafety(){
   tb.innerHTML=safetyMembers.length?safetyMembers.map((r,i)=>`<tr class="blacklist-row"><td class="username-cell"><b>${escapeHtml(r.username)}</b></td><td><span class="blacklist-badge">${escapeHtml(r.reason)}</span></td><td>${escapeHtml(r.note||'—')}</td><td><button class="hide-btn" data-delete-safety="${i}">Hapus</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Belum ada daftar Safety Bet.</td></tr>';
 }
 function renderFirstDeposit(){
-  const allVisible=newMemberRows.filter(r=>!getHiddenSet(HIDDEN_NEW_MEMBER_KEY).has(String(r.username)));
-  const filtered=newMemberDateFilter==='all'?allVisible:allVisible.filter(r=>r.calendarDate===newMemberDateFilter);
-  const hidden=newMemberRows.filter(r=>getHiddenSet(HIDDEN_NEW_MEMBER_KEY).has(String(r.username)));
+  const hiddenSet=getHiddenSet(HIDDEN_NEW_MEMBER_KEY);
+  const base=newMemberRows.filter(r=>!hiddenSet.has(String(r.username)));
+  const filtered=newMemberDateFilter==='all'?base:base.filter(r=>r.calendarDate===newMemberDateFilter);
+  const sorted=sortMemberFirstDepositRows(filtered,$('#firstDepositSort').value);
+  const hidden=newMemberRows.filter(r=>hiddenSet.has(String(r.username)));
   const tb=$('#firstDepositTable tbody');
-  tb.innerHTML=filtered.length?filtered.map(r=>`<tr><td>${escapeHtml(r.registerDateRaw)}</td><td class="username-cell"><b>${escapeHtml(r.username)}</b></td><td class="bonus-expected-cell"><span class="bonus-expected">${Math.trunc(Number(r.depositAmount)||0)}</span></td></tr>`).join(''):'<tr><td colspan="3" class="empty">Tidak ada new member yang melakukan deposit pada tanggal yang sama.</td></tr>';
+  tb.innerHTML=sorted.length?sorted.map((r,i)=>`<tr><td class="row-number-cell">${i+1}</td><td>${escapeHtml(r.registerDateRaw)}</td><td class="username-cell"><b>${escapeHtml(r.username)}</b></td><td class="bonus-expected-cell"><span class="bonus-expected ${Number(r.depositAmount)>0?'deposit-positive':'deposit-zero'}">${Math.trunc(Number(r.depositAmount)||0)}</span></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Belum ada New Member pada hasil yang dipilih.</td></tr>';
   const dates=[...new Set(newMemberRows.map(r=>r.calendarDate).filter(Boolean))].sort();
   $('#firstDepositDateFilter').innerHTML='<option value="all">Semua tanggal</option>'+dates.map(d=>`<option value="${d}">${d}</option>`).join('');
   $('#firstDepositDateFilter').value=newMemberDateFilter;
-  $('#firstDepositSummary').textContent=`${filtered.length} member cocok • ${newMemberRows.length} member baru terbaca • ${hidden.length} disembunyikan${newMemberDateFilter==='all'?'':' • Filter '+newMemberDateFilter}`;
-  $('#hiddenNewMember').innerHTML='';
+  $('#firstDepositSummary').textContent=`${sorted.length} tampil • ${newMemberRows.length} New Member terbaca • ${hidden.length} disembunyikan • Ada deposit ${newMemberRows.filter(r=>Number(r.depositAmount)>0).length} • Tanpa deposit ${newMemberRows.filter(r=>Number(r.depositAmount)===0).length}${newMemberDateFilter==='all'?'':' • Filter '+newMemberDateFilter}`;
+  $('#hiddenNewMember').innerHTML=hidden.length?`<div class="hidden-title">Username yang disembunyikan — tetap tersembunyi saat data baru diproses (${hidden.length})</div><div class="hidden-items">${hidden.map(r=>`<div class="hidden-item"><b>${escapeHtml(r.username)}</b><span>${escapeHtml(r.registerDateRaw)} • ${Math.trunc(Number(r.depositAmount)||0)}</span><button class="hide-btn" data-show-new-member="${newMemberRows.indexOf(r)}">Munculkan</button></div>`).join('')}</div>`:'';
 }
 $('#addSafety').onclick=()=>{
   const username=$('#safetyUsername').value.trim(); const reason=$('#safetyReason').value; const note=$('#safetyNote').value.trim();
@@ -177,9 +188,9 @@ $('#processFirstDeposit').onclick=()=>{
   $('#firstDepositSummary').textContent=`New Members terbaca ${result.memberCount} • QRPay terbaca ${result.qrCount} • History terbaca ${result.historyCount} • Deposit ditemukan ${result.matchedCount} • Tidak deposit ${result.noDepositCount}. Semua New Member tetap ditampilkan sesuai urutan Register Date.`;
 };
 $('#clearFirstDeposit').onclick=()=>{$('#newMembersText').value='';$('#fdQrText').value='';$('#fdHistoryText').value='';newMemberRows=[];newMemberDateFilter='all';renderFirstDeposit();$('#firstDepositSummary').textContent='Data hasil dibersihkan.';};
-$('#copyFirstDeposit').onclick=async()=>{const hidden=getHiddenSet(HIDDEN_NEW_MEMBER_KEY);const filtered=newMemberRows.filter(r=>!hidden.has(String(r.username))).filter(r=>newMemberDateFilter==='all'||r.calendarDate===newMemberDateFilter);const txt=sortMemberFirstDepositRows(filtered,$('#firstDepositSort').value).map(r=>`${r.registerDateRaw}\t${r.username}\t${Math.trunc(Number(r.depositAmount)||0)}`).join('\n');if(!txt)return;try{await navigator.clipboard.writeText(txt);$('#firstDepositSummary').textContent=`Hasil 3 kolom berhasil disalin: ${filtered.length} baris.`;}catch{$('#firstDepositSummary').textContent='Clipboard browser tidak tersedia. Salin manual dari tabel hasil.';}};
-$('#firstDepositDateFilter').onchange=()=>{newMemberDateFilter=$('#firstDepositDateFilter').value;const sorted=sortMemberFirstDepositRows(newMemberRows,$('#firstDepositSort').value);newMemberRows=sorted;renderFirstDeposit();};
-$('#firstDepositSort').onchange=()=>{newMemberRows=sortMemberFirstDepositRows(newMemberRows,$('#firstDepositSort').value);renderFirstDeposit();};
+$('#copyFirstDeposit').onclick=async()=>{const hidden=getHiddenSet(HIDDEN_NEW_MEMBER_KEY);const filtered=newMemberRows.filter(r=>!hidden.has(String(r.username))).filter(r=>newMemberDateFilter==='all'||r.calendarDate===newMemberDateFilter);const sorted=sortMemberFirstDepositRows(filtered,$('#firstDepositSort').value);const txt=sorted.map((r,i)=>`${i+1}\t${r.registerDateRaw}\t${r.username}\t${Math.trunc(Number(r.depositAmount)||0)}`).join('\n');if(!txt)return;try{await navigator.clipboard.writeText(txt);$('#firstDepositSummary').textContent=`Hasil 4 kolom berhasil disalin ke Excel: ${sorted.length} baris.`;}catch{$('#firstDepositSummary').textContent='Clipboard browser tidak tersedia. Salin manual dari tabel hasil.';}};
+$('#firstDepositDateFilter').onchange=()=>{newMemberDateFilter=$('#firstDepositDateFilter').value;renderFirstDeposit();};
+$('#firstDepositSort').onchange=()=>{renderFirstDeposit();};
 function tick(){const now=new Date();const t=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);$('#clock').textContent=t+' WIB';}tick();setInterval(tick,1000);
 document.querySelectorAll('.nav-item').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('#tab-'+btn.dataset.tab).classList.add('active');setSection(btn.dataset.tab);});
 $('#safetyReason').innerHTML=SAFETY_REASONS.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
