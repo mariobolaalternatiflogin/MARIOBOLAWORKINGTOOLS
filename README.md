@@ -1,5 +1,5 @@
-[README.md](https://github.com/user-attachments/files/32543148/README.md)
-# Working Tools — Bonus + Member Module v2.0
+[README.md](https://github.com/user-attachments/files/32568174/README.md)
+# Working Tools — Bonus + Member Module v2.1
 
 ## Scope
 Version 2.0 adds the MEMBER module while keeping the existing 1.1/1.2 Bonus behavior intact.
@@ -26,3 +26,14 @@ Existing 1.2 behavior is retained: reads `To Bank` containing `SCB A BONUS DEPOS
 
 ### Clock
 Header clock is fixed to `Asia/Jakarta` (GMT+7) for display only. It is not used by any parser, date filter, matching, or calculation.
+
+
+## v2.1 — New Member First Deposit: tampilkan semua New Members
+
+Perubahan hanya pada modul MEMBER 2.2:
+- Semua baris New Members yang dipaste tetap ditampilkan, meskipun tidak melakukan deposit.
+- Member tanpa deposit yang memenuhi syarat mendapat nominal `0`.
+- Member dengan deposit mendapat nominal first deposit yang paling awal, dari QRPay atau Deposit Request History, selama deposit confirmed terjadi pada tanggal kalender yang sama dan setelah waktu register.
+- Urutan default tetap berdasarkan Register Date paling awal ke paling akhir.
+- Copy ke Excel tetap 3 kolom TAB-separated: Register Date, Username, First Deposit. Nominal selalu integer tanpa titik/koma.
+- Logika parser inti `parser.js` untuk 1.1 Cek Bonus dan 1.2 Input Bonus Harian tidak diubah.
