@@ -36,3 +36,27 @@
   border-color:#ff6b6b;
   box-shadow:0 0 0 2px #4d0707,0 3px 12px rgba(255,71,71,.34);
 }
+
+#tab-check .username-cell b{
+  display:inline-block;
+  min-width:155px;
+  text-align:left;
+  font-size:22px;
+  line-height:1;
+  font-weight:1000;
+  color:#fff;
+  background:#0a0a0a;
+  border:3px solid #00e5ff;
+  border-radius:9px;
+  padding:10px 13px;
+  box-shadow:0 0 0 2px #12314a,0 3px 12px rgba(0,229,255,.38);
+  text-shadow:0 1px 1px #000;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.01em;
+}
+#tab-check .blacklist-row .username-cell b{
+  color:#fff;
+  background:#7d0909;
+  border-color:#ff6b6b;
+  box-shadow:0 0 0 2px #4d0707,0 3px 12px rgba(255,71,71,.34);
+}
