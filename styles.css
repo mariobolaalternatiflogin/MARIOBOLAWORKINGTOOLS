@@ -11,3 +11,28 @@
 
 /* v2.2 — Member First Deposit 4-column output + explicit Safety blacklist state. */
 .row-number-cell{width:58px;text-align:center!important;font-weight:900;color:#52677a;font-variant-numeric:tabular-nums}.first-deposit-card .bonus-expected{min-width:120px;text-align:right}.deposit-positive{background:linear-gradient(180deg,#fff5b8,#ffd967)!important}.deposit-zero{background:#edf1f5!important;border-color:#cad5de!important;color:#546575!important;box-shadow:none!important}.blacklist-status{color:#a30d0d!important;font-weight:1000}.blacklist-message{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:#8d1111}.blacklist-message b{font-size:12px}.blacklist-note{display:block;width:100%;font-size:11px;color:#8f3a3a;font-weight:700}.blacklist-row td{background:#ffdede!important;color:#7f1111}.blacklist-row .bonus-given,.blacklist-row .bonus-expected{opacity:.72}.member-table-wrap .row-number-cell{position:sticky;left:0;background:inherit}
+
+
+/* v2.3: 1.1 Cek Bonus — high-contrast BONUS SEHARUSNYA only */
+#tab-check .bonus-expected{
+  display:inline-block;
+  min-width:155px;
+  text-align:right;
+  font-size:22px;
+  line-height:1;
+  font-weight:1000;
+  color:#fff;
+  background:#0a0a0a;
+  border:3px solid #00e5ff;
+  border-radius:9px;
+  padding:10px 13px;
+  box-shadow:0 0 0 2px #12314a,0 3px 12px rgba(0,229,255,.38);
+  text-shadow:0 1px 1px #000;
+  font-variant-numeric:tabular-nums;
+}
+#tab-check .blacklist-row .bonus-expected{
+  background:#7d0909;
+  color:#fff;
+  border-color:#ff6b6b;
+  box-shadow:0 0 0 2px #4d0707,0 3px 12px rgba(255,71,71,.34);
+}
