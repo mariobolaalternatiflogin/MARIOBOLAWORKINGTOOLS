@@ -56,3 +56,7 @@ Perubahan hanya pada modul MEMBER 2.2:
 - Nilai tampilan tetap mengikuti format laporan, sedangkan Copy ke Excel mengubah nilai menjadi integer rupiah (contoh `-1,129.35` → `-1129350`).
 - Filter game terbentuk dari nama file, maksimal 6 game unik. SEMUA GAME menggabungkan total kekalahan per username dari semua game yang diunggah.
 - Mesin parser BONUS/MEMBER lama tidak diubah.
+
+
+## v2.6 Cashback rounding update
+3.1 Cashback Mingguan Slot now rounds the final loss amount to the nearest whole thousand-unit before display/export: below .50 rounds toward zero, .50 and above rounds away from zero. Display always shows `.000`; Excel copy exports the rounded integer rupiah value. Example: -29,647.99 -> -29,648.000 -> -29648000; -19,955.29 -> -19,955.000 -> -19955000.
