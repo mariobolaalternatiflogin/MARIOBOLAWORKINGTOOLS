@@ -60,10 +60,14 @@ export function processCashbackReports(reports, gameFilter='all'){
 }
 
 export function displayLoss(rawLoss){
+  // UI shows the rounded whole-thousand-unit value without the trailing .000.
+  // Example: -29,647.99 -> -29,648
   const rounded=roundCashbackLoss(rawLoss);
-  return rounded.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+  return rounded.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
 }
 
 export function excelLoss(rawLoss){
-  return roundCashbackLoss(rawLoss)*CASHBACK_REPORT_UNIT;
+  // Excel copy uses the same rounded whole-thousand-unit value, without .000
+  // and without multiplying by 1,000. Example: -29,647.99 -> -29648.
+  return roundCashbackLoss(rawLoss);
 }
