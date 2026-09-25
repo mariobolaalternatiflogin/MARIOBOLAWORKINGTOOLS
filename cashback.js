@@ -11,6 +11,18 @@ export function deriveGameName(fileName=''){
 function normalizeUsername(v){ return String(v??'').trim(); }
 function normalizeLossRaw(v){ const n=Number(v); return Number.isFinite(n)?n:NaN; }
 
+/**
+ * Round a loss reported in "thousands of rupiah" to the nearest whole thousand-unit.
+ * Because losses are negative, round the magnitude first so .50 and above goes away
+ * from zero and below .50 goes toward zero.
+ * Examples: -29647.99 -> -29648, -19955.29 -> -19955, -19955.50 -> -19956.
+ */
+export function roundCashbackLoss(rawLoss){
+  const n=Number(rawLoss);
+  if(!Number.isFinite(n)) return 0;
+  return n < 0 ? -Math.round(Math.abs(n)) : Math.round(n);
+}
+
 export function processCashbackReports(reports, gameFilter='all'){
   const grouped=new Map();
   const sourceStats=[];
@@ -48,9 +60,10 @@ export function processCashbackReports(reports, gameFilter='all'){
 }
 
 export function displayLoss(rawLoss){
-  return Number(rawLoss||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const rounded=roundCashbackLoss(rawLoss);
+  return rounded.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
 }
 
 export function excelLoss(rawLoss){
-  return Math.round(Number(rawLoss||0)*CASHBACK_REPORT_UNIT);
+  return roundCashbackLoss(rawLoss)*CASHBACK_REPORT_UNIT;
 }
