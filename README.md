@@ -59,4 +59,7 @@ Perubahan hanya pada modul MEMBER 2.2:
 
 
 ## v2.6 Cashback rounding update
-3.1 Cashback Mingguan Slot now rounds the final loss amount to the nearest whole thousand-unit before display/export: below .50 rounds toward zero, .50 and above rounds away from zero. Display always shows `.000`; Excel copy exports the rounded integer rupiah value. Example: -29,647.99 -> -29,648.000 -> -29648000; -19,955.29 -> -19,955.000 -> -19955000.
+3.1 Cashback Mingguan Slot rounds the final loss amount to the nearest whole thousand-unit before display/export: below .50 rounds toward zero, .50 and above rounds away from zero.
+
+## v2.7 Cashback output notation update
+The 3.1 result and Excel copy now omit the trailing `.000` after rounding. Examples: `-29,647.99` -> `-29,648`; `-19,955.29` -> `-19,955`; `-19,955.50` -> `-19,956`. Excel copy uses the same rounded whole-thousand-unit integer (`-29648`, `-19955`, `-19956`) and does not multiply it by 1,000.
