@@ -1,5 +1,5 @@
-[README.md](https://github.com/user-attachments/files/32568174/README.md)
-# Working Tools — Bonus + Member Module v2.1
+[Uploading README.md…]()
+# Working Tools — Bonus + Member Module v2.2
 
 ## Scope
 Version 2.0 adds the MEMBER module while keeping the existing 1.1/1.2 Bonus behavior intact.
@@ -22,7 +22,7 @@ Existing 1.2 behavior is retained: reads `To Bank` containing `SCB A BONUS DEPOS
 - New Members registration date/time is parsed in the report's `M/D/YYYY h:mm:ss AM/PM` format and matched to deposits using the same calendar date.
 - Deposit must occur at or after the registration time on that date.
 - First deposit is the earliest eligible confirmed deposit from QRPay or Member Deposit.
-- Output: REGISTER DATE, USERNAME, FIRST DEPOSIT; Excel copy uses tab-separated 3 columns and integer nominal values.
+- Output: NO, REGISTER DATE, USERNAME, FIRST DEPOSIT; Excel copy uses tab-separated 4 columns and integer nominal values. Semua New Members tetap ditampilkan; member tanpa deposit = 0.
 
 ### Clock
 Header clock is fixed to `Asia/Jakarta` (GMT+7) for display only. It is not used by any parser, date filter, matching, or calculation.
@@ -37,3 +37,22 @@ Perubahan hanya pada modul MEMBER 2.2:
 - Urutan default tetap berdasarkan Register Date paling awal ke paling akhir.
 - Copy ke Excel tetap 3 kolom TAB-separated: Register Date, Username, First Deposit. Nominal selalu integer tanpa titik/koma.
 - Logika parser inti `parser.js` untuk 1.1 Cek Bonus dan 1.2 Input Bonus Harian tidak diubah.
+
+
+## v2.2 — New Member First Deposit 4 kolom + Safety Bet database linkage
+- 2.2 menghasilkan semua New Members yang dipaste, termasuk yang tidak deposit (FIRST DEPOSIT = 0).
+- Output UI dan Copy Excel menjadi 4 kolom TAB-separated: NO, REGISTER DATE, USERNAME, FIRST DEPOSIT.
+- Nomor urut mengikuti urutan hasil saat ini, dimulai dari 1.
+- 2.1 Safety Bet tetap disimpan sebagai database lokal browser (`localStorage`) dan menjadi acuan blacklist pada 1.1.
+- Username yang ada di database 2.1 ditandai satu baris penuh merah pada 1.1 dengan label `DI BLACKLIST MEMBER SB` dan alasan/keterangan yang tersimpan.
+- Blacklist pada 1.1 adalah overlay tampilan/operasional; mesin parser `parser.js` tidak diubah.
+- Jam header tetap Asia/Jakarta (GMT+7) dan hanya untuk tampilan.
+
+## v2.5 — 3.1 Cashback Mingguan Slot
+- Input utama berupa upload file Excel `.xlsx`, bukan copy-paste.
+- Sistem membaca kolom `Username` dan `WinLoseAmt` dari worksheet report.
+- Hanya kekalahan minimal Rp500.000 yang diambil. Pada format laporan yang diuji, `WinLoseAmt = -500` setara Rp500.000 dan `WinLoseAmt = -1129.35` setara -Rp1.129.350.
+- Baris `TOTAL` dan footer laporan tidak diperlakukan sebagai member.
+- Nilai tampilan tetap mengikuti format laporan, sedangkan Copy ke Excel mengubah nilai menjadi integer rupiah (contoh `-1,129.35` → `-1129350`).
+- Filter game terbentuk dari nama file, maksimal 6 game unik. SEMUA GAME menggabungkan total kekalahan per username dari semua game yang diunggah.
+- Mesin parser BONUS/MEMBER lama tidak diubah.
