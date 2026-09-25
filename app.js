@@ -1,5 +1,7 @@
 import {auditBonuses,processDailyBonus,parseReport} from './parser.js';
 import {parseNewMembers,processNewMemberFirstDeposit,sortMemberFirstDepositRows,SAFETY_REASONS,normalizeSafetyRecord} from './member.js';
+import {readXlsxReport} from './xlsx-lite.js';
+import {processCashbackReports,deriveGameName,displayLoss,excelLoss,CASHBACK_THRESHOLD_RP} from './cashback.js';
 const EXAMPLE_QR=`| | **User Name** | **From Bank** | **To Bank** | **Amount** | **Reference** | **RRN** | **Date** | **Payment Method** | **Status** | **Invoice** | **Status Date** | **Remark** | **Edited By** |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 |1|BEB\\@Sf0810|DANA<br>Sultan Faiz Alfalah<br>08**19087***|PrabuPay<br>mariobola_oauser<br>id|**500.000**|17900064366235456||22/09/2026 12:00:37 AM|QR Pay|Confirmed|View|22/09/2026 12:01:23 AM||QRPay User|
@@ -25,7 +27,7 @@ const HIDDEN_CHECK_KEY='working-tools-bonus.hiddenCheckUsernames.v1';
 const HIDDEN_INPUT_KEY='working-tools-bonus.hiddenInputUsernames.v1';
 const SAFETY_KEY='working-tools-member.safetyMembers.v1';
 const HIDDEN_NEW_MEMBER_KEY='working-tools-member.hiddenNewMemberUsernames.v1';
-let checkRows=[], inputRows=[], checkFilter='pending', safetyMembers=[], newMemberRows=[], newMemberDateFilter='all';
+let checkRows=[], inputRows=[], checkFilter='pending', safetyMembers=[], newMemberRows=[], newMemberDateFilter='all', cashbackReports=[], cashbackRows=[], cashbackGameFilter='all';
 function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function loadHidden(key){try{const raw=localStorage.getItem(key);const list=JSON.parse(raw||'[]');return new Set(Array.isArray(list)?list.map(String):[]);}catch{return new Set();}}
 function saveHidden(key,set){try{localStorage.setItem(key,JSON.stringify([...set]));}catch{}}
@@ -144,7 +146,7 @@ document.addEventListener('click',e=>{
   if(ex){const type=ex.dataset.example;if(type==='qr')$('#qrText').value=EXAMPLE_QR;else if(type==='history'){$('#historyText').value=EXAMPLE_HISTORY;$('#inputHistory').value=EXAMPLE_HISTORY;$('#fdHistoryText').value=EXAMPLE_HISTORY;}else if(type==='newmembers')$('#newMembersText').value=EXAMPLE_NEW_MEMBERS;}
 });
 function setSection(tab){
-  const map={check:['1. BONUS','Cek bonus dan input bonus harian — parser tetap menggunakan data transaksi dari browser.'],input:['1. BONUS','Input bonus harian — ambil seluruh SCB A BONUS DEPOSIT HARIAN.'],safety:['2. MEMBER','Daftar Member Safety Bet — daftar tersimpan sebagai blacklist lintas proses bonus/cashback.'],firstDeposit:['2. MEMBER','New Member First Deposit — cocokkan New Members dengan deposit tanggal yang sama.']};
+  const map={check:['1. BONUS','Cek bonus dan input bonus harian — parser tetap menggunakan data transaksi dari browser.'],input:['1. BONUS','Input bonus harian — ambil seluruh SCB A BONUS DEPOSIT HARIAN.'],safety:['2. MEMBER','Daftar Member Safety Bet — daftar tersimpan sebagai blacklist lintas proses bonus/cashback.'],firstDeposit:['2. MEMBER','New Member First Deposit — cocokkan New Members dengan deposit tanggal yang sama.'],cashback:['3. CASHBACK MINGGUAN','Cashback Mingguan Slot — baca laporan Excel game, ambil kekalahan minimal Rp500.000.']};
   const cfg=map[tab]||map.check;
   $('#sectionTitle').textContent=cfg[0]; $('#sectionDesc').textContent=cfg[1];
 }
@@ -153,6 +155,63 @@ function renderSafety(){
   $('#safetySummary').textContent=`${safetyMembers.length} member tersimpan sebagai Safety Bet / blacklist.`;
   tb.innerHTML=safetyMembers.length?safetyMembers.map((r,i)=>`<tr class="blacklist-row"><td class="username-cell"><b>${escapeHtml(r.username)}</b></td><td><span class="blacklist-badge">${escapeHtml(r.reason)}</span></td><td>${escapeHtml(r.note||'—')}</td><td><button class="hide-btn" data-delete-safety="${i}">Hapus</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Belum ada daftar Safety Bet.</td></tr>';
 }
+function renderCashbackGameFilter(){
+  const sel=$('#cashbackGameFilter');
+  if(!sel)return;
+  const games=[...new Set(cashbackReports.map(r=>r.game).filter(Boolean))];
+  const current=(cashbackGameFilter==='all'||games.includes(cashbackGameFilter))?cashbackGameFilter:'all';
+  sel.innerHTML='<option value="all">SEMUA GAME</option>'+games.slice(0,6).map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+  sel.value=current; cashbackGameFilter=current;
+}
+function renderCashback(){
+  const tb=$('#cashbackTable tbody');
+  if(!tb)return;
+  const rows=cashbackRows;
+  tb.innerHTML=rows.length?rows.map(r=>`<tr><td class="username-cell cashback-username"><b>${escapeHtml(r.username)}</b></td><td class="cashback-loss-cell"><span>${escapeHtml(displayLoss(r.rawLoss))}</span></td></tr>`).join(''):'<tr><td colspan="2" class="empty">Belum ada hasil. Upload file Excel lalu klik PROSES CASHBACK.</td></tr>';
+  const selected=cashbackGameFilter==='all'?'SEMUA GAME':cashbackGameFilter;
+  const games=[...new Set(cashbackReports.map(r=>r.game).filter(Boolean))];
+  $('#cashbackSummary').textContent=`${cashbackReports.length} file terbaca • ${games.length} game terdeteksi • Filter ${selected} • ${rows.length} username memenuhi kekalahan minimal Rp500.000.`;
+  $('#cashbackFilesSummary').innerHTML=cashbackReports.length?cashbackReports.map(r=>`<div class="cashback-file-item"><b>${escapeHtml(r.game)}</b><span>${escapeHtml(r.fileName)}</span><em>${r.rows.length} baris data</em></div>`).join(''):'<span>Belum ada file.</span>';
+}
+async function loadCashbackFiles(files){
+  const list=[...files].filter(f=>/\.xlsx$/i.test(f.name));
+  if(!list.length){$('#cashbackSummary').textContent='File yang didukung untuk Cashback Mingguan Slot adalah .xlsx.';return;}
+  const groups=new Map();
+  for(const file of list){
+    const game=deriveGameName(file.name);
+    const key=`${file.name}__${game}`;
+    try{
+      const parsed=await readXlsxReport(file);
+      groups.set(key,{fileName:file.name,game,rows:parsed.rows,sheet:parsed.sheet});
+    }catch(err){
+      $('#cashbackSummary').textContent=`Gagal membaca ${file.name}: ${err.message||err}`;
+    }
+  }
+  const uniqueGames=[...new Set([...groups.values()].map(r=>r.game))];
+  if(uniqueGames.length>6){
+    $('#cashbackSummary').textContent='Maksimal 6 game unik dapat digunakan pada Cashback Mingguan Slot.';
+    return;
+  }
+  cashbackReports=[...groups.values()];
+  renderCashbackGameFilter();
+  const result=processCashbackReports(cashbackReports,cashbackGameFilter);
+  cashbackRows=result.rows;
+  renderCashback();
+}
+$('#processCashback').onclick=async()=>{
+  const input=$('#cashbackFiles');
+  if(!input.files?.length){$('#cashbackSummary').textContent='Silakan upload minimal 1 file Excel (.xlsx).';return;}
+  $('#cashbackSummary').textContent='Membaca file Excel...';
+  await loadCashbackFiles(input.files);
+};
+$('#cashbackGameFilter').onchange=()=>{cashbackGameFilter=$('#cashbackGameFilter').value;cashbackRows=processCashbackReports(cashbackReports,cashbackGameFilter).rows;renderCashback();};
+$('#copyCashback').onclick=async()=>{
+  const txt=cashbackRows.map(r=>`${r.username}\t${excelLoss(r.rawLoss)}`).join('\n');
+  if(!txt)return;
+  try{await navigator.clipboard.writeText(txt);$('#cashbackSummary').textContent=`Hasil 2 kolom berhasil disalin ke Excel: ${cashbackRows.length} baris.`;}catch{$('#cashbackSummary').textContent='Clipboard browser tidak tersedia. Salin manual dari tabel hasil.';}
+};
+$('#clearCashback').onclick=()=>{$('#cashbackFiles').value='';cashbackReports=[];cashbackRows=[];cashbackGameFilter='all';renderCashbackGameFilter();renderCashback();$('#cashbackSummary').textContent='Data cashback dibersihkan.';};
+
 function renderFirstDeposit(){
   const hiddenSet=getHiddenSet(HIDDEN_NEW_MEMBER_KEY);
   const base=newMemberRows.filter(r=>!hiddenSet.has(String(r.username)));
