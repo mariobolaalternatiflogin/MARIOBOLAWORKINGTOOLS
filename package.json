@@ -1,1 +1,10 @@
-{"name":"working-tools-v1","version":"2.1.0","private":true,"type":"module","scripts":{"test":"node test/parser.test.mjs && node test/input-bonus-v1.8.test.mjs && node test/input-bonus-footer-tolerance.test.mjs && node test/browser-copy.test.mjs && node test/browser-tab-copy.test.mjs && node test/member.test.mjs && node test/new-member-browser.test.mjs"}}
+{
+  "name": "working-tools-bonus-v2",
+  "private": true,
+  "version": "2.5.0",
+  "type": "module",
+  "description": "Working Tools Bonus + Member + Cashback Mingguan Slot",
+  "scripts": {
+    "test": "node test/parser.test.mjs && node test/input-bonus-v1.8.test.mjs && node test/input-bonus-footer-tolerance.test.mjs && node test/new-member-browser.test.mjs && node test/member.test.mjs && node test/browser-copy.test.mjs && node test/browser-tab-copy.test.mjs && node test/ui-v2.2.test.mjs && node test/cashback.test.mjs"
+  }
+}
